@@ -1,0 +1,298 @@
+openapi: 3.0.3
+info:
+  title: Monitoreo GPON API
+  version: '1.0.0'
+  description: Especificación mínima para integrar el frontend Angular (`monitoreo-gpon-front`). Incluye hubs, olts y autenticación JWT.
+servers:
+  - url: http://localhost:8080
+    description: Backend local
+paths:
+  /api/auth/login:
+    post:
+      summary: Login (obtiene JWT)
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Token generado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                success:
+                  value:
+                    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    tokenType: Bearer
+                    expiresIn: 3600
+  /api/hubs:
+    get:
+      summary: Listar hubs (incluye OLTS por hub)
+      tags:
+        - hubs
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de hubs con sus OLTS
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Hub'
+              examples:
+                example:
+                  value: |
+                    - id: 1
+                      name: Hub Central
+                      olts:
+                        - id: 10
+                          name: OLT-1
+                          ipAddress: 192.168.1.10
+                          model: OLT-X
+                          vendor: Acme
+                          location: Planta Baja
+                          status: UP
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/hubs/{hubId}:
+    get:
+      summary: Obtener un hub por id
+      tags:
+        - hubs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: hubId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Hub encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hub'
+        '404':
+          description: Hub no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/hubs/{hubId}/olts:
+    get:
+      summary: Listar OLTS de un hub
+      tags:
+        - olts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: hubId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de OLTS
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Olt'
+  /api/olts:
+    post:
+      summary: Crear una OLT
+      tags:
+        - olts
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OltCreate'
+            examples:
+              create:
+                value: |
+                  {
+                    "name": "OLT-1",
+                    "ipAddress": "192.168.1.10",
+                    "location": "Planta Baja",
+                    "model": "OLT-X",
+                    "vendor": "Acme",
+                    "hubId": 1
+                  }
+      responses:
+        '201':
+          description: OLT creada
+          headers:
+            Location:
+              description: URL de la nueva OLT
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Olt'
+  /api/olts/{oltId}:
+    get:
+      summary: Obtener OLT por id (opcional)
+      tags:
+        - olts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: oltId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OLT encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Olt'
+        '404':
+          description: No encontrada
+    put:
+      summary: Actualizar OLT por id (opcional)
+      tags:
+        - olts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: oltId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OltCreate'
+      responses:
+        '200':
+          description: OLT actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Olt'
+    delete:
+      summary: Eliminar OLT por id (opcional)
+      tags:
+        - olts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: oltId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Eliminada correctamente
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    AuthRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        tokenType:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: integer
+          description: seconds
+    Hub:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        olts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Olt'
+    Olt:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        ipAddress:
+          type: string
+          format: ipv4
+        model:
+          type: string
+        vendor:
+          type: string
+        location:
+          type: string
+        status:
+          type: string
+          enum: [UP, DOWN, UNKNOWN]
+        hubId:
+          type: integer
+    OltCreate:
+      type: object
+      required: [name, ipAddress, hubId]
+      properties:
+        name:
+          type: string
+        ipAddress:
+          type: string
+        location:
+          type: string
+        model:
+          type: string
+        vendor:
+          type: string
+        hubId:
+          type: integer
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
