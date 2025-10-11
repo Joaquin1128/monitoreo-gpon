@@ -1,0 +1,38 @@
+<form [formGroup]="oltForm" (ngSubmit)="onSubmit()" class="container mt-4">
+  <div class="container"> <h1 class="text-center">Form Alta OLT</h1> </div>
+  
+    <div class="form-group">
+    <label for="name">Nombre de la OLT:</label>
+    <input formControlName="name" id="name" class="form-control" />
+  </div>
+
+  <div class="form-group">
+    <label for="ipAddress">Dirección IP:</label>
+    <input formControlName="ipAddress" id="ipAddress" class="form-control" />
+  </div>
+
+  <div class="form-group">
+    <label for="location">Ubicación:</label>
+    <input formControlName="location" id="location" class="form-control" />
+  </div>
+ <div class="form-group">
+    <label for="Latitud">Latitud:</label>
+    <input formControlName="Latitud" id="Latitud" class="form-control" />
+  </div>
+ <div class="form-group">
+    <label for="Longitud">Longitud:</label>
+    <input formControlName="Longitud" id="Longitud" class="form-control" />
+  </div>
+
+  <div class="form-group">
+    <label for="model">Modelo:</label>
+    <input formControlName="model" id="model" class="form-control" />
+  </div>
+
+  <div class="form-group">
+    <label for="vendor">Fabricante:</label>
+    <input formControlName="vendor" id="vendor" class="form-control" />
+  </div>
+<br>
+  <button type="submit" class="btn btn-primary">Registrar OLT</button>
+</form>
