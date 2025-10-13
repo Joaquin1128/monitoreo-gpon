@@ -20,6 +20,7 @@ public class Metric {
 
     private String metricType;
     private Double value;
+    private String stringValue;
     private OffsetDateTime collectedAt = OffsetDateTime.now();
 
     // getters/setters
@@ -33,6 +34,8 @@ public class Metric {
     public void setMetricType(String metricType) { this.metricType = metricType; }
     public Double getValue() { return value; }
     public void setValue(Double value) { this.value = value; }
+    public String getStringValue() { return stringValue; }
+    public void setStringValue(String stringValue) { this.stringValue = stringValue; }
     public OffsetDateTime getCollectedAt() { return collectedAt; }
     public void setCollectedAt(OffsetDateTime collectedAt) { this.collectedAt = collectedAt; }
 }

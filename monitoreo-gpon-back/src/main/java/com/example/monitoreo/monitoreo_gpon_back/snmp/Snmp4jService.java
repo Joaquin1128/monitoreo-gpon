@@ -51,7 +51,7 @@ public class Snmp4jService implements SnmpService {
         CommunityTarget<UdpAddress> target = new CommunityTarget<>();
         target.setCommunity(new OctetString(community));
         target.setAddress(targetAddress);
-        // reduce retries to avoid long waits (retries * timeout can add up)
+        // reduce retries to avoid long waits (retries * timeout can add up) verificar cuanto
         target.setRetries(0);
         target.setTimeout(timeoutMs);
         target.setVersion(SnmpConstants.version2c);
