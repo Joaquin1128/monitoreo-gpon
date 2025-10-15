@@ -18,12 +18,12 @@ public class Ont {
     private Integer onuIndex;
     private String serialNumber;
     private String model;
-    private String vendor;
+    @Enumerated(EnumType.STRING)
+    private Vendor vendor;
     private String status;
 
     private OffsetDateTime lastSeenAt;
 
-    // getters/setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Olt getOlt() { return olt; }
@@ -36,8 +36,8 @@ public class Ont {
     public void setSerialNumber(String serialNumber) { this.serialNumber = serialNumber; }
     public String getModel() { return model; }
     public void setModel(String model) { this.model = model; }
-    public String getVendor() { return vendor; }
-    public void setVendor(String vendor) { this.vendor = vendor; }
+    public Vendor getVendor() { return vendor; }
+    public void setVendor(Vendor vendor) { this.vendor = vendor; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public OffsetDateTime getLastSeenAt() { return lastSeenAt; }

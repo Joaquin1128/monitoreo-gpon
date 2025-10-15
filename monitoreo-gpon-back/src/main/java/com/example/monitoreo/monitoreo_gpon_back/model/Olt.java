@@ -27,18 +27,21 @@ public class Olt {
     @OneToMany(mappedBy = "olt", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Ont> onts = new ArrayList<>();
 
-    // campos adicionales usados por controladores y UI
     private String model;
-    private String vendor;
+    @Enumerated(EnumType.STRING)
+    private Vendor vendor;
     private String location;
     private String status;
+
+    @ManyToOne
+    @JoinColumn(name = "snmp_profile_id")
+    private com.example.monitoreo.monitoreo_gpon_back.model.SnmpProfile snmpProfile;
 
     @ManyToOne
     @JoinColumn(name = "hub_id")
     @JsonBackReference
     private Hub hub;
 
-    // getters / setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
@@ -62,11 +65,10 @@ public class Olt {
     public List<Ont> getOnts() { return onts; }
     public void setOnts(List<Ont> onts) { this.onts = onts; }
     
-    // extra getters/setters
     public String getModel() { return model; }
     public void setModel(String model) { this.model = model; }
-    public String getVendor() { return vendor; }
-    public void setVendor(String vendor) { this.vendor = vendor; }
+    public Vendor getVendor() { return vendor; }
+    public void setVendor(Vendor vendor) { this.vendor = vendor; }
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
     public String getStatus() { return status; }
@@ -74,10 +76,12 @@ public class Olt {
     public Hub getHub() { return hub; }
     public void setHub(Hub hub) { this.hub = hub; }
 
-    // constructor usado por OltController
+    public com.example.monitoreo.monitoreo_gpon_back.model.SnmpProfile getSnmpProfile() { return snmpProfile; }
+    public void setSnmpProfile(com.example.monitoreo.monitoreo_gpon_back.model.SnmpProfile snmpProfile) { this.snmpProfile = snmpProfile; }
+
     public Olt() {}
 
-    public Olt(String name, String ipAddress, String model, String vendor, String location, String status) {
+    public Olt(String name, String ipAddress, String model, Vendor vendor, String location, String status) {
         this.name = name;
         this.ipAddress = ipAddress;
         this.model = model;

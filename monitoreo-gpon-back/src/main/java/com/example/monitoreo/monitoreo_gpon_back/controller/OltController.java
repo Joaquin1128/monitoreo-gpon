@@ -31,10 +31,22 @@ public class OltController {
     @PostMapping
     public ResponseEntity<Olt> create(@RequestBody OltCreate dto) {
         Hub hub = hubRepository.findById(dto.getHubId()).orElse(null);
-        if (hub == null) return ResponseEntity.badRequest().build();
-        Olt olt = new Olt(dto.getName(), dto.getIpAddress(), dto.getModel(), dto.getVendor(), dto.getLocation(), "UNKNOWN");
+        if (hub == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        com.example.monitoreo.monitoreo_gpon_back.model.Vendor v = com.example.monitoreo.monitoreo_gpon_back.model.Vendor.UNKNOWN;
+        try {
+            if (dto.getVendor() != null) {
+                v = com.example.monitoreo.monitoreo_gpon_back.model.Vendor.valueOf(dto.getVendor().toUpperCase());
+            }
+        } catch (Exception ignored) {
+        }
+
+        Olt olt = new Olt(dto.getName(), dto.getIpAddress(), dto.getModel(), v, dto.getLocation(), "UNKNOWN");
         olt.setHub(hub);
         Olt saved = oltRepository.save(olt);
+
         return ResponseEntity.created(URI.create("/api/olts/" + saved.getId())).body(saved);
     }
 
@@ -50,7 +62,12 @@ public class OltController {
             existing.setIpAddress(dto.getIpAddress());
             existing.setLocation(dto.getLocation());
             existing.setModel(dto.getModel());
-            existing.setVendor(dto.getVendor());
+            try {
+                existing.setVendor(com.example.monitoreo.monitoreo_gpon_back.model.Vendor.valueOf(dto.getVendor().toUpperCase()));
+            } catch (Exception ex) {
+                existing.setVendor(com.example.monitoreo.monitoreo_gpon_back.model.Vendor.UNKNOWN);
+            }
+
             oltRepository.save(existing);
             return ResponseEntity.ok(existing);
         }).orElse(ResponseEntity.notFound().build());
@@ -58,7 +75,10 @@ public class OltController {
 
     @DeleteMapping("/{oltId}")
     public ResponseEntity<Void> delete(@PathVariable Long oltId) {
-        if (!oltRepository.existsById(oltId)) return ResponseEntity.notFound().build();
+        if (!oltRepository.existsById(oltId)) {
+            return ResponseEntity.notFound().build();
+        }
+        
         oltRepository.deleteById(oltId);
         return ResponseEntity.noContent().build();
     }

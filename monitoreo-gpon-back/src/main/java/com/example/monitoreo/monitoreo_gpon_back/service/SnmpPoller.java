@@ -35,13 +35,11 @@ public class SnmpPoller {
             for (Olt olt : olts) {
                 try {
                     var res = snmpService.probe(olt.getIpAddress(), olt.getSnmpPort(), olt.getSnmpCommunity(), olt.getSnmpTimeoutMs());
-                    // save uptime if present
                     if (res.containsKey("sysUpTime")) {
                         try {
                             double up = Double.parseDouble(res.get("sysUpTime"));
                             metricService.saveNumeric(olt, "sysUpTime", up);
                         } catch (NumberFormatException ex) {
-                            // ignore parsing
                         }
                     }
                     if (res.containsKey("sysName")) {

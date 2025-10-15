@@ -34,7 +34,10 @@ public class HubController {
 
     @GetMapping("/{hubId}/olts")
     public ResponseEntity<?> listOltsByHub(@PathVariable Long hubId) {
-        if (!hubRepository.existsById(hubId)) return ResponseEntity.notFound().build();
+        if (!hubRepository.existsById(hubId)) {
+            return ResponseEntity.notFound().build();
+        }
+        
         return ResponseEntity.ok(oltRepository.findByHubId(hubId));
     }
 }

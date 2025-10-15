@@ -51,7 +51,7 @@ public class Snmp4jService implements SnmpService {
         CommunityTarget<UdpAddress> target = new CommunityTarget<>();
         target.setCommunity(new OctetString(community));
         target.setAddress(targetAddress);
-        // reduce retries to avoid long waits (retries * timeout can add up) verificar cuanto
+        // falta definir los retries de la consulta snmp
         target.setRetries(0);
         target.setTimeout(timeoutMs);
         target.setVersion(SnmpConstants.version2c);
@@ -87,6 +87,49 @@ public class Snmp4jService implements SnmpService {
         }
 
         log.debug("SNMP probe success for {}:{} -> {}", host, port, result);
+        return result;
+    }
+
+    @Override
+    public Map<String, String> getByOids(String host, int port, String community, int timeoutMs, java.util.List<String> oids) throws Exception {
+        UdpAddress targetAddress = new UdpAddress(host + "/" + port);
+
+        CommunityTarget<UdpAddress> target = new CommunityTarget<>();
+        target.setCommunity(new OctetString(community));
+        target.setAddress(targetAddress);
+        target.setRetries(0);
+        target.setTimeout(timeoutMs);
+        target.setVersion(SnmpConstants.version2c);
+
+        PDU pdu = new PDU();
+        for (String oid : oids) {
+            pdu.add(new VariableBinding(new OID(oid)));
+        }
+        pdu.setType(PDU.GET);
+
+        ResponseEvent<UdpAddress> response = snmp.get(pdu, target);
+        if (response == null || response.getResponse() == null) {
+            throw new Exception("No SNMP response from target");
+        }
+        PDU responsePdu = response.getResponse();
+        if (responsePdu.getErrorStatus() != PDU.noError) {
+            throw new Exception("SNMP error: " + responsePdu.getErrorStatusText());
+        }
+
+        Map<String, String> result = new HashMap<>();
+        for (VariableBinding vb : responsePdu.getVariableBindings()) {
+            String oid = vb.getOid().toString();
+            String name = OID_TO_NAME.getOrDefault(oid, oid);
+            String val = vb.getVariable() != null ? vb.getVariable().toString() : null;
+            result.put(name, val == null ? "" : val);
+            result.put(oid, val == null ? "" : val);
+        }
+
+        if (result.isEmpty() || result.values().stream().allMatch(v -> v == null || v.isEmpty())) {
+            log.warn("SNMP getByOids empty for {}:{} (community={})", host, port, community);
+            throw new Exception("SNMP getByOids returned empty result for " + host + ":" + port);
+        }
+
         return result;
     }
 }

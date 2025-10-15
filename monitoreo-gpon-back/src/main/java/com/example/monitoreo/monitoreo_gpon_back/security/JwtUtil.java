@@ -20,7 +20,6 @@ public class JwtUtil {
 
     public JwtUtil(@Value("${security.jwt.secret}") String secret, @Value("${security.jwt.expiration}") long expirationSec) {
         try {
-            // Ensure key length is adequate by hashing secret to SHA-256
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] keyBytes = md.digest(secret.getBytes(StandardCharsets.UTF_8));
             this.key = Keys.hmacShaKeyFor(keyBytes);

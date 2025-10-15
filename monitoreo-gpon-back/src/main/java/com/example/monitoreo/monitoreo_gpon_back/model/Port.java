@@ -22,7 +22,6 @@ public class Port {
     private OffsetDateTime createdAt = OffsetDateTime.now();
     private OffsetDateTime updatedAt = OffsetDateTime.now();
 
-    // getters/setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Olt getOlt() { return olt; }

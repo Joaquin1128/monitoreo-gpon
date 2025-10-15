@@ -19,7 +19,6 @@ public class AppUser {
     private String roles;
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
-    // getters/setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getUsername() { return username; }

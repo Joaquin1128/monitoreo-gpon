@@ -33,7 +33,6 @@ public class SecurityConfig {
             )
             .cors().configurationSource(corsConfigurationSource(allowedOrigins));
 
-        // Register JWT filter
         http.addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
