@@ -1,79 +1,95 @@
 package com.example.monitoreo.monitoreo_gpon_back.snmp;
 
-import com.example.monitoreo.monitoreo_gpon_back.model.*;
-import com.example.monitoreo.monitoreo_gpon_back.repository.*;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.stereotype.Service;
+
+import com.example.monitoreo.monitoreo_gpon_back.model.*;
+import com.example.monitoreo.monitoreo_gpon_back.model.enums.SnmpValueTypeEnum;
+import com.example.monitoreo.monitoreo_gpon_back.repository.*;
+
 @Service
 public class SnmpOidResolver {
 
-    private final SnmpProfileRepository profileRepository;
-    private final SnmpOidRepository oidRepository;
+    private final DeviceTypeRepository deviceTypeRepository;
+    private final OidDefinitionRepository oidDefinitionRepository;
     private final OltRepository oltRepository;
     private final OntRepository ontRepository;
-    public SnmpOidResolver(SnmpProfileRepository profileRepository, SnmpOidRepository oidRepository, OltRepository oltRepository, OntRepository ontRepository) {
-        this.profileRepository = profileRepository;
-        this.oidRepository = oidRepository;
+
+    public SnmpOidResolver(DeviceTypeRepository deviceTypeRepository, OidDefinitionRepository oidDefinitionRepository, OltRepository oltRepository, OntRepository ontRepository) {
+        this.deviceTypeRepository = deviceTypeRepository;
+        this.oidDefinitionRepository = oidDefinitionRepository;
         this.oltRepository = oltRepository;
         this.ontRepository = ontRepository;
     }
 
     public ResolvedOid resolve(String deviceType, Long deviceId, String metricKey, Map<String, Object> context) {
-        // busca perfil asignado al dispositivo (ver en futuro)
-        if ("OLT".equals(deviceType)) {
-            Optional<Olt> oltOpt = oltRepository.findById(deviceId);
-            if (oltOpt.isPresent()) {
-                Olt olt = oltOpt.get();
-                SnmpProfile p = olt.getSnmpProfile();
-                if (p != null) {
-                    List<SnmpOid> list = oidRepository.findByProfile(p);
-                    for (SnmpOid s : list) if (metricKey.equals(s.getMetricKey())) return new ResolvedOid(s.getOid(), s.getValueType(), "DEVICE_PROFILE");
-                }
-                // vendor default
-                if (olt.getVendor() != null) {
-                    Optional<SnmpProfile> vendorProfile = profileRepository.findByName(olt.getVendor().name() + " default");
-                    if (vendorProfile.isPresent()) {
-                        for (SnmpOid s : oidRepository.findByProfile(vendorProfile.get())) if (metricKey.equals(s.getMetricKey())) return new ResolvedOid(s.getOid(), s.getValueType(), "VENDOR_PROFILE");
-                    }
-                }
-            }
-        } else if ("ONT".equals(deviceType)) {
-            Optional<Ont> ontOpt = ontRepository.findById(deviceId);
-            if (ontOpt.isPresent()) {
-                Ont ont = ontOpt.get();
-                SnmpProfile p = ont.getOlt() != null ? ont.getOlt().getSnmpProfile() : null;
-                if (p != null) {
-                    for (SnmpOid s : oidRepository.findByProfile(p)) if (metricKey.equals(s.getMetricKey())) return new ResolvedOid(s.getOid(), s.getValueType(), "DEVICE_PROFILE");
-                }
-                if (ont.getVendor() != null) {
-                    Optional<SnmpProfile> vendorProfile = profileRepository.findByName(ont.getVendor().name() + " default");
-                    if (vendorProfile.isPresent()) {
-                        for (SnmpOid s : oidRepository.findByProfile(vendorProfile.get())) if (metricKey.equals(s.getMetricKey())) return new ResolvedOid(s.getOid(), s.getValueType(), "VENDOR_PROFILE");
-                    }
-                }
-            }
+        String type = deviceType == null ? "" : deviceType.toUpperCase();
+
+        if ("OLT".equals(type)) {
+            return resolveForOlt(deviceId, metricKey);
+        } else if ("ONT".equals(type) || "ONU".equals(type)) {
+            return resolveForOnt(deviceId, metricKey);
         }
 
-        throw new RuntimeException("OID_NOT_FOUND");
+        throw new IllegalArgumentException("Unsupported device type: " + deviceType);
+    }
+
+    private ResolvedOid resolveForOlt(Long oltId, String metricKey) {
+        return oltRepository.findById(oltId)
+                .map(olt -> {
+                    Vendor v = olt.getVendor();
+                    if (v == null) {
+                        return null;
+                    }
+
+                    Optional<DeviceType> dtOpt = deviceTypeRepository.findByName("OLT");
+                    if (dtOpt.isEmpty()) {
+                        return null;
+                    }
+                    
+                    List<OidDefinition> defs = oidDefinitionRepository.findByVendorAndDeviceType(v, dtOpt.get());
+                    return defs.stream().filter(d -> metricKey.equals(d.getMetricKey())).findFirst()
+                        .map(d -> new ResolvedOid(d.getOid(), d.getValueType(), "OID_DEFINITION")).orElse(null);
+                })
+                .orElse(null);
+    }
+
+    private ResolvedOid resolveForOnt(Long ontId, String metricKey) {
+        return ontRepository.findById(ontId)
+                .map(ont -> {
+                    Vendor v = ont.getVendor() != null ? ont.getVendor() : (ont.getOlt() != null ? ont.getOlt().getVendor() : null);
+                    if (v == null) {
+                        return null;
+                    }
+
+                    Optional<DeviceType> dtOpt = deviceTypeRepository.findByName("ONT");
+                    if (dtOpt.isEmpty()) {
+                        return null;
+                    }
+
+                    List<OidDefinition> defs = oidDefinitionRepository.findByVendorAndDeviceType(v, dtOpt.get());
+                    return defs.stream().filter(d -> metricKey.equals(d.getMetricKey())).findFirst()
+                        .map(d -> new ResolvedOid(d.getOid(), d.getValueType(), "OID_DEFINITION")).orElse(null);
+                })
+                .orElse(null);
     }
 
     public static class ResolvedOid {
         private final String oid;
-        private final SnmpOid.ValueType valueType;
+        private final SnmpValueTypeEnum valueType;
         private final String source;
 
-        public ResolvedOid(String oid, SnmpOid.ValueType valueType, String source) {
+        public ResolvedOid(String oid, SnmpValueTypeEnum valueType, String source) {
             this.oid = oid;
             this.valueType = valueType;
             this.source = source;
         }
 
         public String getOid() { return oid; }
-        public SnmpOid.ValueType getValueType() { return valueType; }
+        public SnmpValueTypeEnum getValueType() { return valueType; }
         public String getSource() { return source; }
     }
 }

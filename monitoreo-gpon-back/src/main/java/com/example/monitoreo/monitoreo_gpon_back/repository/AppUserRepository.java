@@ -1,9 +1,10 @@
 package com.example.monitoreo.monitoreo_gpon_back.repository;
 
-import com.example.monitoreo.monitoreo_gpon_back.model.AppUser;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
+import com.example.monitoreo.monitoreo_gpon_back.model.AppUser;
 
 public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     Optional<AppUser> findByUsername(String username);

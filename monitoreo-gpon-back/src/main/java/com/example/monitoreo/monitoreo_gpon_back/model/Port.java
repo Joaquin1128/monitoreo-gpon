@@ -1,41 +1,47 @@
 package com.example.monitoreo.monitoreo_gpon_back.model;
 
-import jakarta.persistence.*;
 import java.time.OffsetDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "port")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Port {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "olt_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "olt_id", nullable = false, foreignKey = @ForeignKey(name = "fk_port_olt"))
     private Olt olt;
 
+    @Column(nullable = false)
     private Integer slot;
+
+    @Column(name = "port_number", nullable = false)
     private Integer portNumber;
+
+    @Column(length = 255)
     private String description;
+
+    @Column(length = 50)
     private String status;
 
-    private OffsetDateTime createdAt = OffsetDateTime.now();
-    private OffsetDateTime updatedAt = OffsetDateTime.now();
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Olt getOlt() { return olt; }
-    public void setOlt(Olt olt) { this.olt = olt; }
-    public Integer getSlot() { return slot; }
-    public void setSlot(Integer slot) { this.slot = slot; }
-    public Integer getPortNumber() { return portNumber; }
-    public void setPortNumber(Integer portNumber) { this.portNumber = portNumber; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-    public OffsetDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
-    public OffsetDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private OffsetDateTime updatedAt;
 }

@@ -1,93 +1,60 @@
 package com.example.monitoreo.monitoreo_gpon_back.model;
 
-import jakarta.persistence.*;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "olt")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Olt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-    private String ipAddress;
-    private String snmpVersion;
-    private String snmpCommunity;
-    private Integer snmpPort = 161;
-    private Integer snmpTimeoutMs = 5000;
-    private String commandProtectionPassword;
-
-    private OffsetDateTime createdAt = OffsetDateTime.now();
-    private OffsetDateTime updatedAt = OffsetDateTime.now();
-
-    @OneToMany(mappedBy = "olt", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Ont> onts = new ArrayList<>();
-
-    private String model;
-    @Enumerated(EnumType.STRING)
-    private Vendor vendor;
-    private String location;
-    private String status;
-
-    @ManyToOne
-    @JoinColumn(name = "snmp_profile_id")
-    private com.example.monitoreo.monitoreo_gpon_back.model.SnmpProfile snmpProfile;
-
     @ManyToOne
     @JoinColumn(name = "hub_id")
-    @JsonBackReference
     private Hub hub;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getIpAddress() { return ipAddress; }
-    public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
-    public String getSnmpVersion() { return snmpVersion; }
-    public void setSnmpVersion(String snmpVersion) { this.snmpVersion = snmpVersion; }
-    public String getSnmpCommunity() { return snmpCommunity; }
-    public void setSnmpCommunity(String snmpCommunity) { this.snmpCommunity = snmpCommunity; }
-    public Integer getSnmpPort() { return snmpPort; }
-    public void setSnmpPort(Integer snmpPort) { this.snmpPort = snmpPort; }
-    public Integer getSnmpTimeoutMs() { return snmpTimeoutMs; }
-    public void setSnmpTimeoutMs(Integer snmpTimeoutMs) { this.snmpTimeoutMs = snmpTimeoutMs; }
-    public String getCommandProtectionPassword() { return commandProtectionPassword; }
-    public void setCommandProtectionPassword(String commandProtectionPassword) { this.commandProtectionPassword = commandProtectionPassword; }
-    public OffsetDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
-    public OffsetDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
-    public List<Ont> getOnts() { return onts; }
-    public void setOnts(List<Ont> onts) { this.onts = onts; }
-    
-    public String getModel() { return model; }
-    public void setModel(String model) { this.model = model; }
-    public Vendor getVendor() { return vendor; }
-    public void setVendor(Vendor vendor) { this.vendor = vendor; }
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-    public Hub getHub() { return hub; }
-    public void setHub(Hub hub) { this.hub = hub; }
+    @ManyToOne
+    @JoinColumn(name = "vendor_id")
+    private Vendor vendor;
 
-    public com.example.monitoreo.monitoreo_gpon_back.model.SnmpProfile getSnmpProfile() { return snmpProfile; }
-    public void setSnmpProfile(com.example.monitoreo.monitoreo_gpon_back.model.SnmpProfile snmpProfile) { this.snmpProfile = snmpProfile; }
+    @ManyToOne
+    @JoinColumn(name = "device_type_id")
+    private DeviceType deviceType;
 
-    public Olt() {}
+    private String name;
 
-    public Olt(String name, String ipAddress, String model, Vendor vendor, String location, String status) {
-        this.name = name;
-        this.ipAddress = ipAddress;
-        this.model = model;
-        this.vendor = vendor;
-        this.location = location;
-        this.status = status;
-    }
+    @Column(name = "ip_address")
+    private String ipAddress;
+
+    private String serialNumber;
+    private String model;
+    private Integer cantPorts;
+
+    @Column(name = "snmp_version")
+    private String snmpVersion;
+
+    @Column(name = "snmp_community")
+    private String snmpCommunity;
+
+    @Column(name = "snmp_port")
+    private Integer snmpPort;
+
+    @Column(name = "snmp_timeout_ms")
+    private Integer snmpTimeoutMs;
+
+    @Column(name = "soft_version")
+    private String softVersion;
+
+    @Column(name = "command_protection_password")
+    private String commandProtectionPassword;
+
+    @OneToMany(mappedBy = "olt", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Ont> onts;
 }
-

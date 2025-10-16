@@ -1,30 +1,34 @@
 package com.example.monitoreo.monitoreo_gpon_back.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.List;
 
-@Entity
-public class Hub {
+import jakarta.persistence.*;
+import lombok.*;
 
+@Entity
+@Table(name = "hub")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Hub {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
 
-    @OneToMany(mappedBy = "hub", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @Column(name = "created_at")
+    private OffsetDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private OffsetDateTime updatedAt;
+
+    @OneToMany(mappedBy = "hub", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<Olt> olts;
-
-    public Hub() {}
-
-    public Hub(String name) { this.name = name; }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public List<Olt> getOlts() { return olts; }
-    public void setOlts(List<Olt> olts) { this.olts = olts; }
 }
+

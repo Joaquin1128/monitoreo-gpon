@@ -1,12 +1,12 @@
 package com.example.monitoreo.monitoreo_gpon_back.controller;
 
-import com.example.monitoreo.monitoreo_gpon_back.model.Hub;
-import com.example.monitoreo.monitoreo_gpon_back.repository.HubRepository;
-import com.example.monitoreo.monitoreo_gpon_back.repository.OltRepository;
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import com.example.monitoreo.monitoreo_gpon_back.model.Hub;
+import com.example.monitoreo.monitoreo_gpon_back.repository.*;
 
 @RestController
 @RequestMapping("/api/hubs")

@@ -1,45 +1,59 @@
 package com.example.monitoreo.monitoreo_gpon_back.model;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.*;
-import java.time.OffsetDateTime;
+import lombok.*;
 
 @Entity
 @Table(name = "ont")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Ont {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "olt_id")
     private Olt olt;
 
-    private String onuId;
-    private Integer onuIndex;
-    private String serialNumber;
-    private String model;
-    @Enumerated(EnumType.STRING)
+    @ManyToOne
+    @JoinColumn(name = "vendor_id")
     private Vendor vendor;
+
+    @ManyToOne
+    @JoinColumn(name = "device_type_id")
+    private DeviceType deviceType;
+
+    @Column(name = "id_cliente")
+    private String idCliente;
+
+    @Column(name = "mac_addr")
+    private String macAddr;
+
+    @Column(name = "sn_ont")
+    private String snOnt;
+
+    private String model;
+    private String tecnologia;
+
+    @Column(name = "soft_version")
+    private String softVersion;
+
     private String status;
 
-    private OffsetDateTime lastSeenAt;
+    @Column(name = "box_name")
+    private String boxName;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Olt getOlt() { return olt; }
-    public void setOlt(Olt olt) { this.olt = olt; }
-    public String getOnuId() { return onuId; }
-    public void setOnuId(String onuId) { this.onuId = onuId; }
-    public Integer getOnuIndex() { return onuIndex; }
-    public void setOnuIndex(Integer onuIndex) { this.onuIndex = onuIndex; }
-    public String getSerialNumber() { return serialNumber; }
-    public void setSerialNumber(String serialNumber) { this.serialNumber = serialNumber; }
-    public String getModel() { return model; }
-    public void setModel(String model) { this.model = model; }
-    public Vendor getVendor() { return vendor; }
-    public void setVendor(Vendor vendor) { this.vendor = vendor; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-    public OffsetDateTime getLastSeenAt() { return lastSeenAt; }
-    public void setLastSeenAt(OffsetDateTime lastSeenAt) { this.lastSeenAt = lastSeenAt; }
+    @Column(name = "ip_address")
+    private String ipAddress;
+
+    @Column(name = "cod_olt")
+    private String codOlt;
+
+    @Column(name = "fecha_act")
+    private LocalDate fechaAct;
 }

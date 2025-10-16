@@ -4,12 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "vendor")
+@Table(name = "device_type")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Vendor {
+public class DeviceType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

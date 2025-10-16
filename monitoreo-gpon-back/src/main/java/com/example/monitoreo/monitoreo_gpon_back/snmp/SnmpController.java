@@ -1,23 +1,25 @@
 package com.example.monitoreo.monitoreo_gpon_back.snmp;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Collections;
+
+import org.snmp4j.smi.Variable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.example.monitoreo.monitoreo_gpon_back.model.DeviceType;
+import com.example.monitoreo.monitoreo_gpon_back.model.OidDefinition;
 import com.example.monitoreo.monitoreo_gpon_back.model.Olt;
 import com.example.monitoreo.monitoreo_gpon_back.model.Ont;
+import com.example.monitoreo.monitoreo_gpon_back.model.Vendor;
+import com.example.monitoreo.monitoreo_gpon_back.repository.DeviceTypeRepository;
+import com.example.monitoreo.monitoreo_gpon_back.repository.OidDefinitionRepository;
 import com.example.monitoreo.monitoreo_gpon_back.repository.OltRepository;
 import com.example.monitoreo.monitoreo_gpon_back.repository.OntRepository;
 import com.example.monitoreo.monitoreo_gpon_back.snmp.dto.ProbeRequest;
 import com.example.monitoreo.monitoreo_gpon_back.snmp.dto.ProbeResult;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.example.monitoreo.monitoreo_gpon_back.model.SnmpProfile;
-import java.util.Collections;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/snmp")
@@ -26,69 +28,85 @@ public class SnmpController {
     private final OltRepository oltRepository;
     private final OntRepository ontRepository;
     private final SnmpService snmpService;
-    private final SnmpOidResolver resolver;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final SnmpOidResolver resolver; 
+    private final OidDefinitionRepository oidDefinitionRepository;
+    private final DeviceTypeRepository deviceTypeRepository;
 
-    public SnmpController(OltRepository oltRepository, OntRepository ontRepository, SnmpService snmpService, SnmpOidResolver resolver) {
+    public SnmpController(OltRepository oltRepository, OntRepository ontRepository, SnmpService snmpService, SnmpOidResolver resolver, com.example.monitoreo.monitoreo_gpon_back.repository.OidDefinitionRepository oidDefinitionRepository, com.example.monitoreo.monitoreo_gpon_back.repository.DeviceTypeRepository deviceTypeRepository) {
         this.oltRepository = oltRepository;
         this.ontRepository = ontRepository;
         this.snmpService = snmpService;
         this.resolver = resolver;
+        this.oidDefinitionRepository = oidDefinitionRepository;
+        this.deviceTypeRepository = deviceTypeRepository;
     }
 
-    private List<String> extractMetricListFromProfile(SnmpProfile profile, String deviceType) {
-        if (profile == null || profile.getDefaultMetricSets() == null) return Collections.emptyList();
-        try {
-            Map<String, List<String>> map = objectMapper.readValue(profile.getDefaultMetricSets(), new TypeReference<Map<String, List<String>>>(){});
-            List<String> list = map.get(deviceType);
-            if (list == null) {
-                return Collections.emptyList();
-            }
-
-            return list.stream().filter(s -> s != null && !s.isBlank()).map(String::trim).collect(Collectors.toList());
-        } catch (Exception e) {
+    private List<OidDefinition> fetchOidDefinitionsByDeviceVendorAndType(com.example.monitoreo.monitoreo_gpon_back.model.Vendor vendorEntity, com.example.monitoreo.monitoreo_gpon_back.model.DeviceType deviceType) {
+        if (vendorEntity == null || deviceType == null) {
             return Collections.emptyList();
         }
+
+        List<OidDefinition> defs = oidDefinitionRepository.findByVendorAndDeviceType(vendorEntity, deviceType);
+        if (defs == null) {
+            return Collections.emptyList();
+        }
+
+        return defs;
     }
 
     @PostMapping("/olts/{oltId}/probe")
-    public ResponseEntity<?> probeOlt(@PathVariable Long oltId, @RequestBody ProbeRequest req) {
+    public ResponseEntity<?> probeOlt(@PathVariable Long oltId, @RequestBody(required = false) ProbeRequest req) {
         Olt olt = oltRepository.findById(oltId).orElse(null);
 
-        if (olt == null) return ResponseEntity.notFound().build();
+        if (olt == null) {
+            return ResponseEntity.notFound().build();
+        }
 
         List<ProbeResult> results = new ArrayList<>();
-        Map<String, Object> ctx = req.getContext() == null ? Map.of() : req.getContext();
+        Map<String, Object> ctx = (req == null || req.getContext() == null) ? Map.of() : req.getContext();
 
-        SnmpProfile profile = olt.getSnmpProfile();
-        List<String> metrics = extractMetricListFromProfile(profile, "OLT");
-        if (metrics == null || metrics.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error","No default metrics configured for this OLT/profile"));
+        Vendor vendorEntity = olt.getVendor();
+        DeviceType deviceType = olt.getDeviceType();
+        List<OidDefinition> defs = fetchOidDefinitionsByDeviceVendorAndType(vendorEntity, deviceType);
+        if (defs.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error","No OID definitions for this OLT vendor/type"));
         }
 
         List<String> requestedOids = new ArrayList<>();
         List<SnmpOidResolver.ResolvedOid> resolved = new ArrayList<>();
-        for (String metric : metrics) {
+        List<String> metrics = new ArrayList<>();
+        for (OidDefinition d : defs) {
+            metrics.add(d.getMetricKey());
             try {
-                SnmpOidResolver.ResolvedOid r = resolver.resolve("OLT", oltId, metric, ctx);
+                SnmpOidResolver.ResolvedOid r = resolver.resolve("OLT", oltId, d.getMetricKey(), ctx);
+                if (r == null) {
+                    results.add(new ProbeResult(d.getMetricKey(), null, "OID_NOT_FOUND"));
+                    continue;
+                }
+                
                 resolved.add(r);
                 requestedOids.add(r.getOid());
             } catch (Exception e) {
-                results.add(new ProbeResult(metric, null, "ERROR:" + e.getMessage()));
+                results.add(new ProbeResult(d.getMetricKey(), null, "ERROR:" + e.getMessage()));
             }
         }
 
-            if (!requestedOids.isEmpty()) {
+        if (!requestedOids.isEmpty()) {
             try {
-                Map<String, String> res = snmpService.getByOids(olt.getIpAddress(), olt.getSnmpPort(), olt.getSnmpCommunity(), olt.getSnmpTimeoutMs(), requestedOids);
-                    for (int i = 0; i < resolved.size(); i++) {
-                        SnmpOidResolver.ResolvedOid r = resolved.get(i);
-                        String metric = metrics.get(i);
-                        String value = res.getOrDefault(metric, res.get(r.getOid()));
-                        results.add(new ProbeResult(metric, value, r.getSource()));
-                    }
+                Map<String, org.snmp4j.smi.Variable> res = snmpService.getByOids(olt.getIpAddress(), olt.getSnmpPort(), olt.getSnmpCommunity(), olt.getSnmpTimeoutMs(), requestedOids);
+                for (int i = 0; i < resolved.size(); i++) {
+                    SnmpOidResolver.ResolvedOid r = resolved.get(i);
+                    String metric = i < metrics.size() ? metrics.get(i) : resolved.get(i).getOid();
+                    Variable var = res.get(r.getOid());
+                    String raw = var == null ? null : var.toString();
+                    Object parsed = SnmpUtils.parseVariable(var, r.getValueType());
+                    String vt = r.getValueType() == null ? null : r.getValueType().name();
+                                results.add(new ProbeResult(metric, raw, parsed, vt, r.getSource()));
+                }
             } catch (Exception e) {
-                    for (String metric : metrics) results.add(new ProbeResult(metric, null, "ERROR:" + e.getMessage()));
+                for (String metric : metrics) {
+                    results.add(new ProbeResult(metric, null, "ERROR:" + e.getMessage()));
+                }
             }
         }
 
@@ -96,7 +114,7 @@ public class SnmpController {
     }
 
     @PostMapping("/onts/{ontId}/probe")
-    public ResponseEntity<?> probeOnt(@PathVariable Long ontId, @RequestBody ProbeRequest req) {
+    public ResponseEntity<?> probeOnt(@PathVariable Long ontId, @RequestBody(required = false) ProbeRequest req) {
         Ont ont = ontRepository.findById(ontId).orElse(null);
         if (ont == null) return ResponseEntity.notFound().build();
 
@@ -104,41 +122,51 @@ public class SnmpController {
         if (olt == null) return ResponseEntity.badRequest().body(Map.of("error","ONT has no parent OLT"));
 
         List<ProbeResult> results = new ArrayList<>();
-        Map<String, Object> ctx = req.getContext() == null ? Map.of() : req.getContext();
-        if (!ctx.containsKey("ont_index") && ont.getOnuIndex() != null) {
-            Map<String, Object> m = new HashMap<>(ctx);
-            m.put("ont_index", ont.getOnuIndex());
-            ctx = m;
+        Map<String, Object> ctx = (req == null || req.getContext() == null) ? Map.of() : req.getContext();
+
+        List<String> requestedOids = new ArrayList<>();
+        List<SnmpOidResolver.ResolvedOid> resolved2 = new ArrayList<>();
+        
+        Vendor vendorEntity = ont.getVendor() != null ? ont.getVendor() : olt.getVendor();
+        DeviceType deviceType = ont.getDeviceType() != null ? ont.getDeviceType() : deviceTypeRepository.findByName("ONT").orElse(null);
+        List<OidDefinition> defs = fetchOidDefinitionsByDeviceVendorAndType(vendorEntity, deviceType);
+        if (defs.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error","No OID definitions for this ONT vendor/type"));
         }
 
-        List<String> requestedOids2 = new ArrayList<>();
-        List<SnmpOidResolver.ResolvedOid> resolved2 = new ArrayList<>();
-        SnmpProfile profile2 = olt.getSnmpProfile();
-        List<String> metrics = extractMetricListFromProfile(profile2, "ONT");
-        if (metrics == null || metrics.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error","No default metrics configured for this ONT/profile"));
-        }
-        for (String metric : metrics) {
+        List<String> metrics = new ArrayList<>();
+        for (OidDefinition d : defs) {
+            metrics.add(d.getMetricKey());
             try {
-                SnmpOidResolver.ResolvedOid r = resolver.resolve("ONT", ontId, metric, ctx);
+                SnmpOidResolver.ResolvedOid r = resolver.resolve("ONT", ontId, d.getMetricKey(), ctx);
+                if (r == null) {
+                    results.add(new ProbeResult(d.getMetricKey(), null, "OID_NOT_FOUND"));
+                    continue;
+                }
+
                 resolved2.add(r);
-                requestedOids2.add(r.getOid());
+                requestedOids.add(r.getOid());
             } catch (Exception e) {
-                results.add(new ProbeResult(metric, null, "ERROR:" + e.getMessage()));
+                results.add(new ProbeResult(d.getMetricKey(), null, "ERROR:" + e.getMessage()));
             }
         }
 
-        if (!requestedOids2.isEmpty()) {
+        if (!requestedOids.isEmpty()) {
             try {
-                Map<String, String> res = snmpService.getByOids(olt.getIpAddress(), olt.getSnmpPort(), olt.getSnmpCommunity(), olt.getSnmpTimeoutMs(), requestedOids2);
+                Map<String, Variable> res = snmpService.getByOids(olt.getIpAddress(), olt.getSnmpPort(), olt.getSnmpCommunity(), olt.getSnmpTimeoutMs(), requestedOids);
                 for (int i = 0; i < resolved2.size(); i++) {
                     SnmpOidResolver.ResolvedOid r = resolved2.get(i);
-                    String metric = metrics.get(i);
-                    String value = res.getOrDefault(metric, res.get(r.getOid()));
-                    results.add(new ProbeResult(metric, value, r.getSource()));
+                    String metric = i < metrics.size() ? metrics.get(i) : resolved2.get(i).getOid();
+                    Variable var = res.get(r.getOid());
+                    String raw = var == null ? null : var.toString();
+                    Object parsed = SnmpUtils.parseVariable(var, r.getValueType());
+                    String vt = r.getValueType() == null ? null : r.getValueType().name();
+                    results.add(new ProbeResult(metric, raw, parsed, vt, r.getSource()));
                 }
             } catch (Exception e) {
-                for (String metric : metrics) results.add(new ProbeResult(metric, null, "ERROR:" + e.getMessage()));
+                for (String metric : metrics) {
+                    results.add(new ProbeResult(metric, null, "ERROR:" + e.getMessage()));
+                }
             }
         }
 
