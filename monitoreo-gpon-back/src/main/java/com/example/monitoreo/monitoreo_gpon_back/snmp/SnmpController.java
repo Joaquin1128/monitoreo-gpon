@@ -75,7 +75,7 @@ public class SnmpController {
                     String raw = var == null ? null : var.toString();
                     Object parsed = SnmpUtils.parseVariable(var, r.getValueType());
                     String vt = r.getValueType() == null ? null : r.getValueType().name();
-                    results.add(new ProbeResult(metric, raw, parsed, vt, r.getSource()));
+                    results.add(new ProbeResult(metric, raw, r.getSource(), parsed, vt));
                 }
             } catch (Exception e) {
                 for (String metric : metrics) {
@@ -83,7 +83,7 @@ public class SnmpController {
                 }
             }
         }
-        
+
         return results;
     }
 
