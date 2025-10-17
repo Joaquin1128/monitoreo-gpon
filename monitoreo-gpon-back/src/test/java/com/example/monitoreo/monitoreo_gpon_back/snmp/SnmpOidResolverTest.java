@@ -5,15 +5,16 @@ import static org.mockito.Mockito.*;
 
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import com.example.monitoreo.monitoreo_gpon_back.model.OidDefinition;
+import com.example.monitoreo.monitoreo_gpon_back.model.Olt;
 import com.example.monitoreo.monitoreo_gpon_back.model.Vendor;
 import com.example.monitoreo.monitoreo_gpon_back.model.DeviceType;
 import com.example.monitoreo.monitoreo_gpon_back.model.enums.SnmpValueTypeEnum;
 import com.example.monitoreo.monitoreo_gpon_back.repository.OidDefinitionRepository;
 import com.example.monitoreo.monitoreo_gpon_back.snmp.SnmpOidResolver.ResolvedOid;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 public class SnmpOidResolverTest {
 
@@ -28,35 +29,89 @@ public class SnmpOidResolverTest {
 
     @Test
     public void resolveForDeviceReturnsResolvedOid() {
-        Vendor v = new Vendor(); v.setId(1L); v.setName("ACME");
-        DeviceType dt = new DeviceType(); dt.setId(2L); dt.setName("OLT");
-        OidDefinition d = new OidDefinition(); d.setId(10L); d.setMetricKey("cpu"); d.setOid(".1.2.3"); d.setValueType(SnmpValueTypeEnum.NUMERIC);
+        Vendor vendor = new Vendor(); vendor.setId(1L); vendor.setName("ACME");
+        DeviceType deviceType = new DeviceType(); deviceType.setId(2L); deviceType.setName("OLT");
 
-        when(oidRepo.findByVendorAndDeviceType(v, dt)).thenReturn(List.of(d));
+        OidDefinition oidDef = new OidDefinition();
+        oidDef.setId(10L);
+        oidDef.setMetricKey("cpu");
+        oidDef.setOid(".1.2.3");
+        oidDef.setValueType(SnmpValueTypeEnum.NUMERIC);
 
-        ResolvedOid res = resolver.resolve(v, dt, "cpu");
-        assertNotNull(res);
-        assertEquals(".1.2.3", res.getOid());
-        assertEquals(SnmpValueTypeEnum.NUMERIC, res.getValueType());
+        when(oidRepo.findByVendorAndDeviceType(vendor, deviceType)).thenReturn(List.of(oidDef));
+
+        Olt oltDevice = new Olt();
+        oltDevice.setVendor(vendor);
+        oltDevice.setDeviceType(deviceType);
+
+        ResolvedOid result = resolver.resolve(oltDevice, "cpu");
+        assertNotNull(result);
+        assertEquals(".1.2.3", result.getOid());
+        assertEquals(SnmpValueTypeEnum.NUMERIC, result.getValueType());
+
+        verify(oidRepo).findByVendorAndDeviceType(vendor, deviceType);
     }
 
     @Test
     public void resolveReturnsNullWhenNoDefs() {
-        Vendor v = new Vendor(); v.setId(1L);
-        DeviceType dt = new DeviceType(); dt.setId(2L);
-        when(oidRepo.findByVendorAndDeviceType(v, dt)).thenReturn(List.of());
-        assertNull(resolver.resolve(v, dt, "any"));
+        Vendor vendor = new Vendor(); vendor.setId(1L);
+        DeviceType deviceType = new DeviceType(); deviceType.setId(2L);
+
+        when(oidRepo.findByVendorAndDeviceType(vendor, deviceType)).thenReturn(List.of());
+
+        Olt oltDevice = new Olt();
+        oltDevice.setVendor(vendor);
+        oltDevice.setDeviceType(deviceType);
+
+        assertNull(resolver.resolve(oltDevice, "any"));
+
+        verify(oidRepo).findByVendorAndDeviceType(vendor, deviceType);
     }
 
     @Test
     public void resolveFiltersByMetricKey() {
-        Vendor v = new Vendor(); v.setId(1L);
-        DeviceType dt = new DeviceType(); dt.setId(2L);
-        OidDefinition a = new OidDefinition(); a.setMetricKey("m1"); a.setOid(".1"); a.setValueType(SnmpValueTypeEnum.STRING);
-        OidDefinition b = new OidDefinition(); b.setMetricKey("m2"); b.setOid(".2"); b.setValueType(SnmpValueTypeEnum.NUMERIC);
-        when(oidRepo.findByVendorAndDeviceType(v, dt)).thenReturn(List.of(a, b));
-        var r = resolver.resolve(v, dt, "m2");
-        assertNotNull(r);
-        assertEquals(".2", r.getOid());
+        Vendor vendor = new Vendor(); vendor.setId(1L);
+        DeviceType deviceType = new DeviceType(); deviceType.setId(2L);
+
+        OidDefinition oid1 = new OidDefinition();
+        oid1.setMetricKey("m1"); oid1.setOid(".1"); oid1.setValueType(SnmpValueTypeEnum.STRING);
+
+        OidDefinition oid2 = new OidDefinition();
+        oid2.setMetricKey("m2"); oid2.setOid(".2"); oid2.setValueType(SnmpValueTypeEnum.NUMERIC);
+
+        when(oidRepo.findByVendorAndDeviceType(vendor, deviceType)).thenReturn(List.of(oid1, oid2));
+
+        Olt oltDevice = new Olt();
+        oltDevice.setVendor(vendor);
+        oltDevice.setDeviceType(deviceType);
+
+        ResolvedOid result = resolver.resolve(oltDevice, "m2");
+        assertNotNull(result);
+        assertEquals(".2", result.getOid());
+        assertEquals(SnmpValueTypeEnum.NUMERIC, result.getValueType());
+
+        verify(oidRepo).findByVendorAndDeviceType(vendor, deviceType);
+    }
+
+    @Test
+    public void resolveWithDeviceObject() {
+        Vendor vendor = new Vendor(); vendor.setId(5L); vendor.setName("Z");
+        DeviceType deviceType = new DeviceType(); deviceType.setId(6L); deviceType.setName("ONT");
+
+        OidDefinition oidDef = new OidDefinition();
+        oidDef.setMetricKey("m"); oidDef.setOid(".9"); oidDef.setValueType(SnmpValueTypeEnum.STRING);
+
+        when(oidRepo.findByVendorAndDeviceType(vendor, deviceType)).thenReturn(List.of(oidDef));
+
+        Olt oltDevice = new Olt();
+        oltDevice.setVendor(vendor);
+        oltDevice.setDeviceType(deviceType);
+
+        ResolvedOid result = resolver.resolve(oltDevice, "m");
+        assertNotNull(result);
+        assertEquals(".9", result.getOid());
+        assertEquals(SnmpValueTypeEnum.STRING, result.getValueType());
+
+        verify(oidRepo).findByVendorAndDeviceType(vendor, deviceType);
     }
 }

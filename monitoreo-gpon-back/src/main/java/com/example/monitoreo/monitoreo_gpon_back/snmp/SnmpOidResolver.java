@@ -15,7 +15,13 @@ public class SnmpOidResolver {
         this.oidDefinitionRepository = oidDefinitionRepository;
     }
 
-    public ResolvedOid resolve(Vendor vendor, DeviceType deviceType, String metricKey) {
+    public ResolvedOid resolve(IDevice device, String metricKey) {
+        if (device == null || metricKey == null) {
+            return null;
+        }
+        
+        Vendor vendor = device.getVendor();
+        DeviceType deviceType = device.getDeviceType();
         if (vendor == null || deviceType == null || metricKey == null) {
             return null;
         }

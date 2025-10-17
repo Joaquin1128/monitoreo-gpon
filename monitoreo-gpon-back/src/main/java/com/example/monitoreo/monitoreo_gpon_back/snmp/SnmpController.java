@@ -36,11 +36,14 @@ public class SnmpController {
     }
 
     private List<OidDefinition> fetchOidDefinitions(Vendor vendor, DeviceType deviceType) {
-        if (vendor == null || deviceType == null) return Collections.emptyList();
+        if (vendor == null || deviceType == null) {
+            return Collections.emptyList();
+        }
+
         return oidDefinitionRepository.findByVendorAndDeviceType(vendor, deviceType);
     }
 
-    private List<ProbeResult> probeDevice(List<OidDefinition> defs, Vendor vendor, DeviceType deviceType,
+    private List<ProbeResult> probeDevice(List<OidDefinition> defs, IDevice device,
         String ipAddress, int port, String community, int timeoutMs, Map<String, Object> ctx) {
         List<ProbeResult> results = new ArrayList<>();
         List<String> requestedOids = new ArrayList<>();
@@ -50,7 +53,7 @@ public class SnmpController {
         for (OidDefinition d : defs) {
             metrics.add(d.getMetricKey());
             try {
-                SnmpOidResolver.ResolvedOid r = resolver.resolve(vendor, deviceType, d.getMetricKey());
+                SnmpOidResolver.ResolvedOid r = resolver.resolve(device, d.getMetricKey());
                 if (r == null) {
                     results.add(new ProbeResult(d.getMetricKey(), null, "OID_NOT_FOUND"));
                     continue;
@@ -80,13 +83,16 @@ public class SnmpController {
                 }
             }
         }
+        
         return results;
     }
 
     @PostMapping("/olts/{oltId}/probe")
     public ResponseEntity<?> probeOlt(@PathVariable Long oltId, @RequestBody(required = false) ProbeRequest req) {
         Olt olt = oltRepository.findById(oltId).orElse(null);
-        if (olt == null) return ResponseEntity.notFound().build();
+        if (olt == null) {
+            return ResponseEntity.notFound().build();
+        }
 
         Vendor vendor = olt.getVendor();
         DeviceType deviceType = olt.getDeviceType();
@@ -97,7 +103,7 @@ public class SnmpController {
         }
 
         Map<String, Object> ctx = (req == null || req.getContext() == null) ? Map.of() : req.getContext();
-        List<ProbeResult> results = probeDevice(defs, vendor, deviceType, olt.getIpAddress(),
+        List<ProbeResult> results = probeDevice(defs, olt, olt.getIpAddress(),
             olt.getSnmpPort(), olt.getSnmpCommunity(), olt.getSnmpTimeoutMs(), ctx);
 
         return ResponseEntity.ok(results);
@@ -106,10 +112,14 @@ public class SnmpController {
     @PostMapping("/onts/{ontId}/probe")
     public ResponseEntity<?> probeOnt(@PathVariable Long ontId, @RequestBody(required = false) ProbeRequest req) {
         Ont ont = ontRepository.findById(ontId).orElse(null);
-        if (ont == null) return ResponseEntity.notFound().build();
+        if (ont == null) {
+            return ResponseEntity.notFound().build();
+        }
 
         Olt olt = ont.getOlt();
-        if (olt == null) return ResponseEntity.badRequest().body(Map.of("error", "ONT has no parent OLT"));
+        if (olt == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "ONT has no parent OLT"));
+        }
 
         Vendor vendor = ont.getVendor() != null ? ont.getVendor() : olt.getVendor();
         DeviceType deviceType = ont.getDeviceType() != null ? ont.getDeviceType() : deviceTypeRepository.findByName("ONT").orElse(null);
@@ -120,7 +130,7 @@ public class SnmpController {
         }
 
         Map<String, Object> ctx = (req == null || req.getContext() == null) ? Map.of() : req.getContext();
-        List<ProbeResult> results = probeDevice(defs, vendor, deviceType, olt.getIpAddress(),
+        List<ProbeResult> results = probeDevice(defs, ont, olt.getIpAddress(),
             olt.getSnmpPort(), olt.getSnmpCommunity(), olt.getSnmpTimeoutMs(), ctx);
 
         return ResponseEntity.ok(results);

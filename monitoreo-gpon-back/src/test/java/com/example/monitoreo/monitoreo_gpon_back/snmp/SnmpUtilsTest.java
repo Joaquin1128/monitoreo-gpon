@@ -35,7 +35,7 @@ public class SnmpUtilsTest {
     @Test
     public void parseCounter64AsBigInteger() {
         BigInteger bigValue = new BigInteger("12345678901234567890");
-        Variable v = new Counter64(bigValue.longValue()); // Counter64 solo acepta long
+        Variable v = new Counter64(bigValue.longValue());
         Object parsed = SnmpUtils.parseVariable(v, SnmpValueTypeEnum.NUMERIC);
         assertNotNull(parsed);
         assertTrue(parsed instanceof Number || parsed instanceof BigInteger);

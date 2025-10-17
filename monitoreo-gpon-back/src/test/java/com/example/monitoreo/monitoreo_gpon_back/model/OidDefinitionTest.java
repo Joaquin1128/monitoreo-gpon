@@ -2,8 +2,9 @@ package com.example.monitoreo.monitoreo_gpon_back.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.example.monitoreo.monitoreo_gpon_back.model.enums.SnmpValueTypeEnum;
 import org.junit.jupiter.api.Test;
+
+import com.example.monitoreo.monitoreo_gpon_back.model.enums.SnmpValueTypeEnum;
 
 public class OidDefinitionTest {
 
@@ -22,6 +23,18 @@ public class OidDefinitionTest {
     @Test
     public void constructWithStringDefaultString() {
         OidDefinition d = new OidDefinition("m", ".1.2.3", "FOO");
+        assertEquals(SnmpValueTypeEnum.STRING, d.getValueType());
+    }
+
+    @Test
+    public void constructWithStringNumericLowercaseAndSpaces() {
+        OidDefinition d = new OidDefinition("m", ".1.2.3", " numeric ");
+        assertEquals(SnmpValueTypeEnum.NUMERIC, d.getValueType());
+    }
+
+    @Test
+    public void constructWithNullDefaultsToString() {
+        OidDefinition d = new OidDefinition("m", ".1.2.3", (String) null);
         assertEquals(SnmpValueTypeEnum.STRING, d.getValueType());
     }
 }

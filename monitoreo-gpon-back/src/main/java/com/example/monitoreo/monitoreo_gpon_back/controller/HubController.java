@@ -28,8 +28,8 @@ public class HubController {
     @GetMapping("/{hubId}")
     public ResponseEntity<Hub> getHub(@PathVariable Long hubId) {
         return hubRepository.findById(hubId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{hubId}/olts")
