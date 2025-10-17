@@ -1,0 +1,37 @@
+package com.example.monitoreo.monitoreo_gpon_back.controller;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.example.monitoreo.monitoreo_gpon_back.model.Ont;
+import com.example.monitoreo.monitoreo_gpon_back.repository.OntRepository;
+
+@RestController
+@RequestMapping("/api/onts")
+public class OntController {
+
+    private final OntRepository ontRepository;
+
+    public OntController(OntRepository ontRepository) {
+        this.ontRepository = ontRepository;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Ont>> getAllOnts() {
+        List<Ont> onts = ontRepository.findAll();
+        return ResponseEntity.ok(onts);
+    }
+
+    @GetMapping("/{ontId}")
+    public ResponseEntity<Ont> getOntById(@PathVariable Long ontId) {
+        return ontRepository.findById(ontId).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/olt/{oltId}")
+    public ResponseEntity<List<Ont>> getOntsByOlt(@PathVariable Long oltId) {
+        List<Ont> onts = ontRepository.findByOltId(oltId);
+        return ResponseEntity.ok(onts);
+    }
+}
