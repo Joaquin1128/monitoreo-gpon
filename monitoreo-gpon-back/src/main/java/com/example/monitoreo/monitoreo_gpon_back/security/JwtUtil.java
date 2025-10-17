@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
 @Component
@@ -34,11 +33,11 @@ public class JwtUtil {
         Date now = new Date();
         Date exp = new Date(now.getTime() + expirationMillis);
         return Jwts.builder()
-                .setSubject(subject)
-                .setIssuedAt(now)
-                .setExpiration(exp)
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
+            .setSubject(subject)
+            .setIssuedAt(now)
+            .setExpiration(exp)
+            .signWith(key)
+            .compact();
     }
 
     public boolean validateToken(String token) {
@@ -55,5 +54,7 @@ public class JwtUtil {
         return claims.getSubject();
     }
 
-    public long getExpirationSeconds() { return expirationMillis / 1000L; }
+    public long getExpirationSeconds() {
+        return expirationMillis / 1000L;
+    }
 }
