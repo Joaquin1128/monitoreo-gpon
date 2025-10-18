@@ -122,11 +122,11 @@ const DevicesView: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+    <Box sx={{ p: 3, backgroundColor: '#f9fafb', minHeight: '100vh' }}>
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#1e1e1e', mb: 1 }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#111827', mb: 1 }}>
             Gestión de dispositivos
           </Typography>
           <Typography variant="body1" color="textSecondary">
@@ -155,9 +155,9 @@ const DevicesView: React.FC = () => {
             startIcon={<AddIcon />}
             sx={{ 
               borderRadius: 2,
-              background: 'linear-gradient(45deg, #d32f2f, #f57c00)',
+              backgroundColor: '#3b82f6',
               '&:hover': {
-                background: 'linear-gradient(45deg, #b71c1c, #e65100)'
+                backgroundColor: '#1e40af'
               }
             }}
           >
@@ -431,7 +431,7 @@ const DevicesView: React.FC = () => {
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button size="small" disabled>Anterior</Button>
-                <Button size="small" variant="contained" sx={{ backgroundColor: '#d32f2f' }}>1</Button>
+                <Button size="small" variant="contained" sx={{ backgroundColor: '#3b82f6' }}>1</Button>
                 <Button size="small" disabled>Siguiente</Button>
               </Box>
             </Box>

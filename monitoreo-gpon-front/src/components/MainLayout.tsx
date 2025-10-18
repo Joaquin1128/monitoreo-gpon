@@ -15,7 +15,7 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', backgroundColor: '#f5f5f5' }}>
+    <Box sx={{ display: 'flex', height: '100vh', backgroundColor: '#f9fafb' }}>
       {/* Main Sidebar */}
       <Sidebar 
         selectedOltId={selectedOlt?.id}

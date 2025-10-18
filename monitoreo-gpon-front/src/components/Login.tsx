@@ -77,7 +77,7 @@ const Login: React.FC = () => {
                     mb: 1
                   }}
                 >
-                  MONITOREO GPON
+                  MonitoreoGpon
                 </Typography>
                 <Typography variant="body1" color="textSecondary">
                   Sistema de gestión de dispositivos GPON

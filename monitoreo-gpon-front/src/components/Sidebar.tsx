@@ -10,7 +10,6 @@ import {
   ListItemText,
   Typography,
   Collapse,
-  Divider,
   IconButton,
   CircularProgress,
   Alert
@@ -124,20 +123,31 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedOltId, onOltSelect }) => {
       sx={{
         width: currentWidth,
         flexShrink: 0,
-        transition: 'width 0.3s ease',
+        transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         '& .MuiDrawer-paper': {
           width: currentWidth,
           boxSizing: 'border-box',
-          backgroundColor: '#1a1a1a',
-          color: '#ffffff',
-          transition: 'width 0.3s ease',
-          borderRight: '1px solid #333'
+          backgroundColor: '#1f2937',
+          color: '#f9fafb',
+          transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          borderRight: '1px solid #374151',
+          boxShadow: '0 0 0 1px rgba(0, 0, 0, 0.05), 0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          overflow: 'hidden',
         },
       }}
     >
       {/* Header */}
-      <Box sx={{ p: 2, borderBottom: '1px solid #333' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <Box sx={{ 
+        p: collapsed ? 1.5 : 2, 
+        borderBottom: '1px solid #374151',
+        minHeight: collapsed ? 64 : 'auto'
+      }}>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: collapsed ? 'center' : 'space-between',
+          height: collapsed ? 32 : 'auto'
+        }}>
           <AnimatePresence>
             {!collapsed && (
               <motion.div
@@ -151,18 +161,23 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedOltId, onOltSelect }) => {
                     sx={{
                       width: 32,
                       height: 32,
-                      backgroundColor: '#d32f2f',
-                      borderRadius: 1,
+                      backgroundColor: '#3b82f6',
+                      borderRadius: 1.5,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      mr: 2
+                      mr: 2,
+                      boxShadow: '0 2px 4px rgba(59, 130, 246, 0.3)'
                     }}
                   >
                     <HomeIcon sx={{ color: 'white', fontSize: 20 }} />
                   </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#ffffff' }}>
-                    MONITOREO GPON
+                  <Typography variant="h6" sx={{ 
+                    fontWeight: 600, 
+                    color: '#f9fafb',
+                    fontSize: '1.1rem'
+                  }}>
+                    MonitoreoGpon
                   </Typography>
                 </Box>
               </motion.div>
@@ -171,7 +186,13 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedOltId, onOltSelect }) => {
           
           <IconButton
             onClick={() => setCollapsed(!collapsed)}
-            sx={{ color: '#ffffff' }}
+            sx={{ 
+              color: '#9ca3af',
+              '&:hover': {
+                backgroundColor: '#374151',
+                color: '#f9fafb'
+              }
+            }}
             size="small"
           >
             {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
@@ -180,23 +201,45 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedOltId, onOltSelect }) => {
       </Box>
 
       {/* Navigation */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        <List sx={{ px: 1, py: 2 }}>
+      <Box sx={{ 
+        flex: 1, 
+        overflow: collapsed ? 'visible' : 'auto',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        <List sx={{ 
+          px: collapsed ? 0.5 : 1, 
+          py: collapsed ? 1 : 2,
+          flex: 1
+        }}>
           {/* Dispositivos Menu */}
           <ListItem disablePadding>
             <ListItemButton
               onClick={() => navigate('/devices')}
               sx={{
-                borderRadius: 1,
+                borderRadius: 2,
                 mb: 1,
-                backgroundColor: location.pathname === '/devices' ? '#d32f2f' : 'transparent',
+                mx: collapsed ? 0.5 : 0,
+                backgroundColor: location.pathname === '/devices' ? '#1e40af' : 'transparent',
+                color: location.pathname === '/devices' ? '#f9fafb' : '#9ca3af',
                 '&:hover': {
-                  backgroundColor: '#d32f2f',
+                  backgroundColor: '#374151',
+                  color: '#f9fafb',
                 },
+                minHeight: collapsed ? 48 : 'auto',
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                px: collapsed ? 1 : 2,
               }}
             >
-              <ListItemIcon>
-                <DevicesIcon sx={{ color: '#ffffff' }} />
+              <ListItemIcon sx={{ 
+                minWidth: collapsed ? 'auto' : 40,
+                justifyContent: 'center',
+                color: 'inherit'
+              }}>
+                <DevicesIcon sx={{ 
+                  fontSize: collapsed ? 24 : 20,
+                  color: 'inherit'
+                }} />
               </ListItemIcon>
               <AnimatePresence>
                 {!collapsed && (
@@ -207,11 +250,12 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedOltId, onOltSelect }) => {
                     transition={{ duration: 0.3 }}
                   >
                     <ListItemText 
-                      primary="Gestión de dispositivos" 
+                      primary="Dispositivos" 
                       sx={{ 
                         '& .MuiListItemText-primary': { 
-                          fontWeight: location.pathname === '/devices' ? 'bold' : 'normal',
-                          fontSize: '0.9rem'
+                          fontWeight: location.pathname === '/devices' ? 600 : 500,
+                          fontSize: '0.875rem',
+                          color: 'inherit'
                         } 
                       }} 
                     />
@@ -223,26 +267,33 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedOltId, onOltSelect }) => {
 
           {/* Hubs and OLTs */}
           {loading ? (
-            <ListItem>
-              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                <CircularProgress size={20} sx={{ color: '#ffffff', mr: 2 }} />
+            <ListItem sx={{ px: collapsed ? 0.5 : 2 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                width: '100%',
+                justifyContent: collapsed ? 'center' : 'flex-start'
+              }}>
+                <CircularProgress size={20} sx={{ color: '#9ca3af' }} />
                 {!collapsed && (
-                  <Typography variant="body2" sx={{ color: '#888' }}>
+                  <Typography variant="body2" sx={{ color: '#9ca3af', ml: 2 }}>
                     Cargando...
                   </Typography>
                 )}
               </Box>
             </ListItem>
           ) : error ? (
-            <ListItem>
-              <Alert severity="error" sx={{ width: '100%', fontSize: '0.8rem' }}>
-                {error}
-              </Alert>
+            <ListItem sx={{ px: collapsed ? 0.5 : 2 }}>
+              {!collapsed && (
+                <Alert severity="error" sx={{ width: '100%', fontSize: '0.8rem' }}>
+                  {error}
+                </Alert>
+              )}
             </ListItem>
           ) : hubs.length === 0 ? (
-            <ListItem>
+            <ListItem sx={{ px: collapsed ? 0.5 : 2 }}>
               {!collapsed && (
-                <Typography variant="body2" sx={{ color: '#888', fontSize: '0.8rem' }}>
+                <Typography variant="body2" sx={{ color: '#9ca3af', fontSize: '0.8rem' }}>
                   No hay dispositivos
                 </Typography>
               )}
@@ -259,15 +310,29 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedOltId, onOltSelect }) => {
                   <ListItemButton
                     onClick={() => handleHubToggle(hub.id)}
                     sx={{
-                      borderRadius: 1,
+                      borderRadius: 2,
                       mb: 0.5,
+                      mx: collapsed ? 0.5 : 0,
+                      backgroundColor: expandedHubs.has(hub.id) ? '#374151' : 'transparent',
+                      color: '#9ca3af',
                       '&:hover': {
-                        backgroundColor: '#333',
+                        backgroundColor: '#374151',
+                        color: '#f9fafb',
                       },
+                      minHeight: collapsed ? 48 : 'auto',
+                      justifyContent: collapsed ? 'center' : 'flex-start',
+                      px: collapsed ? 1 : 2,
                     }}
                   >
-                    <ListItemIcon>
-                      <HubIcon sx={{ color: '#81c784' }} />
+                    <ListItemIcon sx={{ 
+                      minWidth: collapsed ? 'auto' : 40,
+                      justifyContent: 'center',
+                      color: 'inherit'
+                    }}>
+                      <HubIcon sx={{ 
+                        fontSize: collapsed ? 24 : 20,
+                        color: '#10b981'
+                      }} />
                     </ListItemIcon>
                     <AnimatePresence>
                       {!collapsed && (
@@ -282,8 +347,15 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedOltId, onOltSelect }) => {
                             primary={hub.name}
                             secondary={`${hub.olts?.length || 0} OLTs`}
                             sx={{ 
-                              '& .MuiListItemText-primary': { fontSize: '0.85rem' },
-                              '& .MuiListItemText-secondary': { fontSize: '0.75rem', color: '#888' }
+                              '& .MuiListItemText-primary': { 
+                                fontSize: '0.875rem',
+                                fontWeight: 500,
+                                color: 'inherit'
+                              },
+                              '& .MuiListItemText-secondary': { 
+                                fontSize: '0.75rem', 
+                                color: '#6b7280' 
+                              }
                             }}
                           />
                         </motion.div>
@@ -291,9 +363,9 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedOltId, onOltSelect }) => {
                     </AnimatePresence>
                     {!collapsed && (
                       expandedHubs.has(hub.id) ? (
-                        <ExpandLess sx={{ color: '#888' }} />
+                        <ExpandLess sx={{ color: '#9ca3af' }} />
                       ) : (
-                        <ExpandMore sx={{ color: '#888' }} />
+                        <ExpandMore sx={{ color: '#9ca3af' }} />
                       )
                     )}
                   </ListItemButton>
@@ -304,25 +376,29 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedOltId, onOltSelect }) => {
                     {hub.olts?.map((olt) => (
                       <motion.div
                         key={olt.id}
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        transition={{ duration: 0.2 }}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3 }}
                       >
                         <ListItem disablePadding>
                           <ListItemButton
                             onClick={() => handleOltClick(olt)}
                             sx={{
-                              borderRadius: 1,
+                              borderRadius: 2,
                               mb: 0.5,
-                              backgroundColor: isOltSelected(olt) ? '#333' : 'transparent',
-                              borderLeft: isOltSelected(olt) ? '3px solid #d32f2f' : '3px solid transparent',
+                              backgroundColor: isOltSelected(olt) ? '#1e40af' : 'transparent',
+                              color: isOltSelected(olt) ? '#f9fafb' : '#9ca3af',
                               '&:hover': {
-                                backgroundColor: '#333',
+                                backgroundColor: '#374151',
+                                color: '#f9fafb',
                               },
                             }}
                           >
-                            <ListItemIcon>
-                              <RouterIcon sx={{ color: '#ffb74d', fontSize: '1.1rem' }} />
+                            <ListItemIcon sx={{ minWidth: 32 }}>
+                              <RouterIcon sx={{ 
+                                fontSize: 18,
+                                color: '#f59e0b'
+                              }} />
                             </ListItemIcon>
                             <ListItemText 
                               primary={olt.name}
@@ -330,9 +406,13 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedOltId, onOltSelect }) => {
                               sx={{ 
                                 '& .MuiListItemText-primary': { 
                                   fontSize: '0.8rem',
-                                  fontWeight: isOltSelected(olt) ? 'bold' : 'normal'
+                                  fontWeight: isOltSelected(olt) ? 600 : 500,
+                                  color: 'inherit'
                                 },
-                                '& .MuiListItemText-secondary': { fontSize: '0.7rem', color: '#888' }
+                                '& .MuiListItemText-secondary': { 
+                                  fontSize: '0.7rem', 
+                                  color: '#6b7280' 
+                                }
                               }}
                             />
                           </ListItemButton>
@@ -348,21 +428,36 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedOltId, onOltSelect }) => {
       </Box>
 
       {/* Footer */}
-      <Box sx={{ p: 2, borderTop: '1px solid #333' }}>
-        <Divider sx={{ borderColor: '#333', mb: 2 }} />
-        
+      <Box sx={{ 
+        p: collapsed ? 1.5 : 2, 
+        borderTop: '1px solid #374151',
+        minHeight: collapsed ? 64 : 'auto'
+      }}>
         <ListItemButton
           onClick={handleLogout}
           sx={{
-            borderRadius: 1,
+            borderRadius: 2,
             backgroundColor: 'transparent',
+            color: '#ef4444',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            px: collapsed ? 1 : 2,
+            minHeight: collapsed ? 48 : 'auto',
+            border: 'none',
             '&:hover': {
-              backgroundColor: '#d32f2f',
+              backgroundColor: '#374151',
+              color: '#fca5a5',
             },
           }}
         >
-          <ListItemIcon>
-            <LogoutIcon sx={{ color: '#f44336' }} />
+          <ListItemIcon sx={{ 
+            minWidth: collapsed ? 'auto' : 40,
+            justifyContent: 'center',
+            color: 'inherit'
+          }}>
+            <LogoutIcon sx={{ 
+              fontSize: collapsed ? 24 : 20,
+              color: 'inherit'
+            }} />
           </ListItemIcon>
           <AnimatePresence>
             {!collapsed && (
@@ -372,7 +467,16 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedOltId, onOltSelect }) => {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <ListItemText primary="Cerrar Sesión" />
+                <ListItemText 
+                  primary="Cerrar Sesión" 
+                  sx={{ 
+                    '& .MuiListItemText-primary': { 
+                      fontWeight: 500,
+                      fontSize: '0.875rem',
+                      color: 'inherit'
+                    } 
+                  }} 
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -380,7 +484,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedOltId, onOltSelect }) => {
 
         {!collapsed && (
           <Box sx={{ mt: 2, textAlign: 'center' }}>
-            <Typography variant="caption" sx={{ color: '#888', fontSize: '0.7rem' }}>
+            <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.7rem' }}>
               GPON MONITOREO BY JOAQUIN
             </Typography>
           </Box>
