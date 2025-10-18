@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.monitoreo.monitoreo_gpon_back.model.Olt;
-import com.example.monitoreo.monitoreo_gpon_back.model.Ont;
 import com.example.monitoreo.monitoreo_gpon_back.repository.OltRepository;
 
 @RestController
@@ -27,7 +26,9 @@ public class OltController {
 
     @GetMapping("/{oltId}")
     public ResponseEntity<Olt> getOltById(@PathVariable Long oltId) {
-        return oltRepository.findById(oltId).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        return oltRepository.findById(oltId)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/hub/{hubId}")

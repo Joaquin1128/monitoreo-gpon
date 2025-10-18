@@ -2,22 +2,34 @@ openapi: 3.0.3
 info:
   title: Monitoreo GPON API
   version: '1.0.0'
-  description: Especificación mínima para integrar el frontend Angular (`monitoreo-gpon-front`). Incluye hubs, olts y autenticación JWT.
+  description: |
+    Especificación OpenAPI (YAML) generada para el frontend React.
+    Incluye endpoints reales detectados en el backend: Auth, Hubs, Olts y SNMP probes.
+    Seguridad: JWT Bearer.
 servers:
   - url: http://localhost:8080
-    description: Backend local
+    description: Backend local (desarrollo)
+
+security:
+  - bearerAuth: []
+
 paths:
   /api/auth/login:
     post:
-      summary: Login (obtiene JWT)
+      summary: Obtener token JWT (endpoint de testing)
       tags:
-        - auth
+        - Auth
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/AuthRequest'
+            examples:
+              sample:
+                value:
+                  username: admin
+                  password: password
       responses:
         '200':
           description: Token generado
@@ -25,53 +37,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
-              examples:
-                success:
-                  value:
-                    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-                    tokenType: Bearer
-                    expiresIn: 3600
+        '401':
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/hubs:
     get:
-      summary: Listar hubs (incluye OLTS por hub)
+      summary: Listar hubs
       tags:
-        - hubs
-      security:
-        - bearerAuth: []
+        - Hub
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 0
+          description: Página (0-index)
+        - in: query
+          name: size
+          schema:
+            type: integer
+            default: 20
+          description: Tamaño de página
       responses:
         '200':
-          description: Lista de hubs con sus OLTS
+          description: Lista de hubs
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Hub'
-              examples:
-                example:
-                  value: |
-                    - id: 1
-                      name: Hub Central
-                      olts:
-                        - id: 10
-                          name: OLT-1
-                          ipAddress: 192.168.1.10
-                          model: OLT-X
-                          vendor: Acme
-                          location: Planta Baja
-                          status: UP
         '401':
           $ref: '#/components/responses/Unauthorized'
+
   /api/hubs/{hubId}:
     get:
-      summary: Obtener un hub por id
+      summary: Obtener hub por id
       tags:
-        - hubs
-      security:
-        - bearerAuth: []
+        - Hub
       parameters:
-        - name: hubId
-          in: path
+        - in: path
+          name: hubId
           required: true
           schema:
             type: integer
@@ -83,79 +93,72 @@ paths:
               schema:
                 $ref: '#/components/schemas/Hub'
         '404':
-          description: Hub no encontrado
+          description: No encontrado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/hubs/{hubId}/olts:
     get:
-      summary: Listar OLTS de un hub
+      summary: Listar OLTs de un hub
       tags:
-        - olts
-      security:
-        - bearerAuth: []
+        - Hub
       parameters:
-        - name: hubId
-          in: path
+        - in: path
+          name: hubId
           required: true
           schema:
             type: integer
       responses:
         '200':
-          description: Lista de OLTS
+          description: Lista de OLTs del hub
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Olt'
+
   /api/olts:
-    post:
-      summary: Crear una OLT
+    get:
+      summary: Listar OLTs
       tags:
-        - olts
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OltCreate'
-            examples:
-              create:
-                value: |
-                  {
-                    "name": "OLT-1",
-                    "ipAddress": "192.168.1.10",
-                    "location": "Planta Baja",
-                    "model": "OLT-X",
-                    "vendor": "Acme",
-                    "hubId": 1
-                  }
+        - Olt
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            default: 20
+        - in: query
+          name: hubId
+          schema:
+            type: integer
+          description: Filtrar por hubId
       responses:
-        '201':
-          description: OLT creada
-          headers:
-            Location:
-              description: URL de la nueva OLT
-              schema:
-                type: string
+        '200':
+          description: Lista de OLTs
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Olt'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Olt'
+
   /api/olts/{oltId}:
     get:
-      summary: Obtener OLT por id (opcional)
+      summary: Obtener OLT por id
       tags:
-        - olts
-      security:
-        - bearerAuth: []
+        - Olt
       parameters:
-        - name: oltId
-          in: path
+        - in: path
+          name: oltId
           required: true
           schema:
             type: integer
@@ -168,46 +171,106 @@ paths:
                 $ref: '#/components/schemas/Olt'
         '404':
           description: No encontrada
-    put:
-      summary: Actualizar OLT por id (opcional)
+
+  /api/olts/hub/{hubId}:
+    get:
+      summary: Listar OLTs por hub (alternativa - existente en controlador)
       tags:
-        - olts
-      security:
-        - bearerAuth: []
+        - Olt
       parameters:
-        - name: oltId
-          in: path
+        - in: path
+          name: hubId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de OLTs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Olt'
+
+  /api/snmp/olts/{oltId}/probe:
+    post:
+      summary: Ejecutar probe SNMP sobre una OLT
+      tags:
+        - SNMP
+      parameters:
+        - in: path
+          name: oltId
           required: true
           schema:
             type: integer
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OltCreate'
+              $ref: '#/components/schemas/ProbeRequest'
+            examples:
+              example:
+                value:
+                  metricKeys: ["rx_power","tx_power"]
       responses:
         '200':
-          description: OLT actualizada
+          description: Resultados del probe
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Olt'
-    delete:
-      summary: Eliminar OLT por id (opcional)
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProbeResult'
+        '400':
+          description: No hay definiciones de OID para este vendor/deviceType
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: OLT no encontrada
+
+  /api/snmp/onts/{ontId}/probe:
+    post:
+      summary: Ejecutar probe SNMP sobre una ONT
       tags:
-        - olts
-      security:
-        - bearerAuth: []
+        - SNMP
       parameters:
-        - name: oltId
-          in: path
+        - in: path
+          name: ontId
           required: true
           schema:
             type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProbeRequest'
+            examples:
+              example:
+                value:
+                  metricKeys: ["rx_power","tx_power"]
       responses:
-        '204':
-          description: Eliminada correctamente
+        '200':
+          description: Resultados del probe
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProbeResult'
+        '400':
+          description: No hay definiciones de OID para este vendor/deviceType o falta OLT padre
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: ONT no encontrada
+
 components:
   securitySchemes:
     bearerAuth:
@@ -230,10 +293,19 @@ components:
           type: string
         tokenType:
           type: string
-          example: Bearer
         expiresIn:
           type: integer
-          description: seconds
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
     Hub:
       type: object
       properties:
@@ -241,6 +313,18 @@ components:
           type: integer
         name:
           type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
         olts:
           type: array
           items:
@@ -250,49 +334,134 @@ components:
       properties:
         id:
           type: integer
+        hub:
+          $ref: '#/components/schemas/HubRef'
+        vendor:
+          $ref: '#/components/schemas/Vendor'
+        deviceType:
+          $ref: '#/components/schemas/DeviceType'
         name:
           type: string
         ipAddress:
           type: string
           format: ipv4
+        serialNumber:
+          type: string
         model:
           type: string
-        vendor:
+        cantPorts:
+          type: integer
+        snmpVersion:
           type: string
-        location:
+        snmpCommunity:
+          type: string
+        snmpPort:
+          type: integer
+        snmpTimeoutMs:
+          type: integer
+        softVersion:
+          type: string
+        commandProtectionPassword:
+          type: string
+    Ont:
+      type: object
+      properties:
+        id:
+          type: integer
+        olt:
+          $ref: '#/components/schemas/OltRef'
+        vendor:
+          $ref: '#/components/schemas/Vendor'
+        deviceType:
+          $ref: '#/components/schemas/DeviceType'
+        idCliente:
+          type: string
+        macAddr:
+          type: string
+        snOnt:
+          type: string
+        model:
+          type: string
+        tecnologia:
+          type: string
+        softVersion:
           type: string
         status:
           type: string
-          enum: [UP, DOWN, UNKNOWN]
-        hubId:
-          type: integer
-    OltCreate:
+        boxName:
+          type: string
+        ipAddress:
+          type: string
+        codOlt:
+          type: string
+        fechaAct:
+          type: string
+          format: date
+    OltRef:
       type: object
-      required: [name, ipAddress, hubId]
       properties:
+        id:
+          type: integer
         name:
           type: string
         ipAddress:
           type: string
-        location:
-          type: string
-        model:
-          type: string
-        vendor:
-          type: string
-        hubId:
-          type: integer
-    Error:
+    HubRef:
       type: object
       properties:
-        code:
+        id:
           type: integer
-        message:
+        name:
           type: string
+    Vendor:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+    DeviceType:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+    ProbeRequest:
+      type: object
+      properties:
+        metricKeys:
+          type: array
+          items:
+            type: string
+        context:
+          type: object
+          additionalProperties: true
+    ProbeResult:
+      type: object
+      properties:
+        metricKey:
+          type: string
+        raw:
+          type: string
+          nullable: true
+        parsedValue:
+          type: string
+          nullable: true
+        valueType:
+          type: string
+          nullable: true
+        source:
+          type: string
+
   responses:
     Unauthorized:
       description: Unauthorized
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/ErrorResponse'
