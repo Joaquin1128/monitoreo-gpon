@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,7 +30,7 @@ public class Hub {
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "hub", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<Olt> olts;
 }
-

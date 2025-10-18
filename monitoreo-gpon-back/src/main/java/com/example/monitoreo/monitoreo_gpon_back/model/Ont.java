@@ -2,6 +2,8 @@ package com.example.monitoreo.monitoreo_gpon_back.model;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,6 +18,7 @@ public class Ont implements IDevice {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonBackReference
     @ManyToOne(optional = false)
     @JoinColumn(name = "olt_id")
     private Olt olt;

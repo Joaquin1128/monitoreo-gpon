@@ -1,70 +1,129 @@
-# Getting Started with Create React App
+# Monitoreo GPON Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Frontend desarrollado en React con TypeScript y Material UI para el sistema de monitoreo GPON.
 
-## Available Scripts
+## Características
 
-In the project directory, you can run:
+- **Dashboard moderno** con diseño responsivo usando Material UI v7
+- **Autenticación JWT** con protección de rutas
+- **Vista de dispositivos** organizados por Hubs con OLTs expandibles
+- **Tablero de OLT** con métricas SNMP en tiempo real
+- **Animaciones suaves** usando Framer Motion
+- **API cliente** completo basado en OpenAPI specification
 
-### `npm start`
+## Tecnologías
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- React 19.2.0
+- TypeScript 4.9.5
+- Material UI v7
+- Framer Motion v11
+- Axios para HTTP requests
+- React Router v6
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Estructura del Proyecto
 
-### `npm test`
+```
+src/
+├── components/          # Componentes reutilizables
+│   ├── Login.tsx       # Componente de autenticación
+│   ├── RequireAuth.tsx # Wrapper de protección de rutas
+│   ├── Sidebar.tsx     # Barra lateral principal
+│   ├── OltSidebar.tsx  # Barra lateral para OLT seleccionada
+│   └── MainLayout.tsx  # Layout principal
+├── pages/              # Páginas de la aplicación
+│   ├── DevicesView.tsx # Vista de dispositivos
+│   └── OltDashboard.tsx # Tablero de OLT
+├── services/           # Servicios API
+│   ├── api.ts         # Cliente API principal
+│   └── index.ts       # Servicios específicos
+├── types/             # Definiciones de tipos TypeScript
+│   └── api.ts         # Tipos basados en OpenAPI
+└── api/              # Servicios legacy (mantener compatibilidad)
+    ├── client.ts
+    ├── token.ts
+    └── ...
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Funcionalidades
 
-### `npm run build`
+### 1. Autenticación
+- Login con JWT token
+- Protección de rutas automática
+- Logout con limpieza de token
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 2. Vista de Dispositivos
+- Lista de Hubs con información de ubicación
+- OLTs organizadas por Hub con estado visual
+- Tabla detallada con información técnica
+- Navegación directa a tablero de OLT
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 3. Tablero de OLT
+- Información completa de la OLT seleccionada
+- Datos del Hub padre
+- Métricas SNMP en tiempo real
+- Probing automático cada 10 segundos
+- Probing manual bajo demanda
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 4. Barra Lateral Adicional
+- Se muestra al seleccionar una OLT
+- Información resumida de la OLT
+- Navegación entre pestañas (Tablero)
+- Diseño moderno con animaciones
 
-### `npm run eject`
+## API Endpoints
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+El frontend se conecta con los siguientes endpoints del backend:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- `POST /api/auth/login` - Autenticación
+- `GET /api/hubs` - Lista de hubs
+- `GET /api/hubs/{id}` - Hub específico
+- `GET /api/hubs/{id}/olts` - OLTs de un hub
+- `GET /api/olts/{id}` - OLT específica
+- `POST /api/snmp/olts/{id}/probe` - Probe SNMP de OLT
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Configuración
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Variables de Entorno
+```bash
+REACT_APP_API_URL=http://localhost:8080
+```
 
-## Learn More
+### Instalación
+```bash
+npm install
+npm start
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Diseño
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- **Paleta de colores**: Tonos neutros con acentos azules y naranjas
+- **Tipografía**: Roboto con pesos semibold para títulos
+- **Componentes**: Cards con bordes redondeados, botones sin mayúsculas
+- **Animaciones**: Transiciones suaves de 0.3-0.5s
+- **Responsive**: Adaptable a diferentes tamaños de pantalla
 
-### Code Splitting
+## Estado de Desarrollo
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+✅ Completado:
+- Cliente API completo
+- Autenticación JWT
+- Vista de dispositivos con Hubs y OLTs
+- Tablero de OLT con métricas SNMP
+- Barra lateral adicional
+- Animaciones con Framer Motion
+- Routing protegido
+- Tema personalizado de Material UI
 
-### Analyzing the Bundle Size
+🔄 En desarrollo:
+- Vista de ONTs asociadas a OLT
+- Más métricas SNMP
+- Gráficos de rendimiento
+- Alertas y notificaciones
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Notas Técnicas
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- El frontend está completamente tipado con TypeScript
+- Los tipos están generados basándose en la especificación OpenAPI
+- El sistema de probing usa un servicio singleton para evitar múltiples conexiones
+- Las animaciones están optimizadas para rendimiento
+- El diseño es completamente responsive

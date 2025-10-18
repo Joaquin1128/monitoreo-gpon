@@ -2,6 +2,9 @@ package com.example.monitoreo.monitoreo_gpon_back.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,7 +18,8 @@ public class Olt implements IDevice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "hub_id")
     private Hub hub;
@@ -55,6 +59,7 @@ public class Olt implements IDevice {
     @Column(name = "command_protection_password")
     private String commandProtectionPassword;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "olt", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Ont> onts;
 }
