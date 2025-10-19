@@ -4,39 +4,51 @@ import java.math.BigInteger;
 
 import org.snmp4j.smi.Variable;
 
-import com.example.monitoreo.monitoreo_gpon_back.model.enums.SnmpValueTypeEnum;
-
 public final class SnmpUtils {
 
     private SnmpUtils() {}
 
-    public static Object parseVariable(Variable var, SnmpValueTypeEnum type) {
+    public static Object parseVariable(Variable var, SnmpValueType type) {
         if (var == null) {
             return null;
         }
 
         if (type == null) {
-            type = SnmpValueTypeEnum.STRING;
+            type = SnmpValueType.STRING;
         }
 
-        try {
-            switch (type) {
-                case NUMERIC:
-                    try {
-                        return var.toLong();
-                    } catch (Exception ex) {
-                        try {
-                            return new BigInteger(var.toString());
-                        } catch (Exception ex2) {
-                            return Double.parseDouble(var.toString());
-                        }
-                    }
-                case STRING:
-                default:
-                    return var.toString();
-            }
-        } catch (Exception e) {
-            return var.toString();
+        String valueStr = var.toString();
+        
+        switch (type) {
+            case INTEGER32:
+            case UNSIGNED32:
+            case COUNTER32:
+            case GAUGE32:
+                try {
+                    return Long.parseLong(valueStr);
+                } catch (NumberFormatException e) {
+                    return 0L;
+                }
+            case COUNTER64:
+            case GAUGE64:
+                try {
+                    return new BigInteger(valueStr);
+                } catch (NumberFormatException e) {
+                    return BigInteger.ZERO;
+                }
+            case TIMETICKS:
+                try {
+                    return Long.parseLong(valueStr);
+                } catch (NumberFormatException e) {
+                    return 0L;
+                }
+            case BOOLEAN:
+                return "1".equals(valueStr) || "true".equalsIgnoreCase(valueStr);
+            case IP_ADDRESS:
+            case OID:
+            case STRING:
+            default:
+                return valueStr;
         }
     }
 }

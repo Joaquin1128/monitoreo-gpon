@@ -1,5 +1,5 @@
 import apiClient from './api';
-import { Hub, Olt, Ont, ProbeRequest, ProbeResult } from '../types';
+import { Hub, Olt, Ont, ProbeRequest, ProbeResult, OltSummaryResponse, OltDetailedResponse } from '../types';
 
 // Hub Service
 export const hubService = {
@@ -32,6 +32,17 @@ export const oltService = {
 
   async probe(id: number, request?: ProbeRequest): Promise<ProbeResult[]> {
     return apiClient.probeOlt(id, request);
+  }
+};
+
+// OLT SNMP Service
+export const oltSnmpService = {
+  async getAllSummary(): Promise<OltSummaryResponse[]> {
+    return apiClient.getOltsSummary();
+  },
+
+  async getDetailed(id: number): Promise<OltDetailedResponse> {
+    return apiClient.getOltDetailed(id);
   }
 };
 

@@ -3,7 +3,6 @@ package com.example.monitoreo.monitoreo_gpon_back.snmp;
 import org.springframework.stereotype.Service;
 
 import com.example.monitoreo.monitoreo_gpon_back.model.*;
-import com.example.monitoreo.monitoreo_gpon_back.model.enums.SnmpValueTypeEnum;
 import com.example.monitoreo.monitoreo_gpon_back.repository.*;
 
 @Service
@@ -29,23 +28,23 @@ public class SnmpOidResolver {
         return oidDefinitionRepository.findByVendorAndDeviceType(vendor, deviceType).stream()
             .filter(d -> metricKey.equals(d.getMetricKey()))
             .findFirst()
-            .map(d -> new ResolvedOid(d.getOid(), d.getValueType(), "OID_DEFINITION"))
+            .map(d -> new ResolvedOid(d.getOid(), d.getValueType(), d.getLogicalName()))
             .orElse(null);
     }
 
     public static class ResolvedOid {
         private final String oid;
-        private final SnmpValueTypeEnum valueType;
-        private final String source;
+        private final SnmpValueType valueType;
+        private final String logicalName;
 
-        public ResolvedOid(String oid, SnmpValueTypeEnum valueType, String source) {
+        public ResolvedOid(String oid, SnmpValueType valueType, String logicalName) {
             this.oid = oid;
             this.valueType = valueType;
-            this.source = source;
+            this.logicalName = logicalName;
         }
 
         public String getOid() { return oid; }
-        public SnmpValueTypeEnum getValueType() { return valueType; }
-        public String getSource() { return source; }
+        public SnmpValueType getValueType() { return valueType; }
+        public String getLogicalName() { return logicalName; }
     }
 }

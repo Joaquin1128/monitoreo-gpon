@@ -43,22 +43,46 @@ export interface Hub {
   olts?: Olt[];
 }
 
-export interface Olt {
+export interface OltSummaryResponse {
   id: number;
-  hub?: HubRef;
-  vendor?: Vendor;
-  deviceType?: DeviceType;
   name: string;
   ipAddress?: string;
-  serialNumber?: string;
   model?: string;
-  cantPorts?: number;
-  snmpVersion?: string;
-  snmpCommunity?: string;
-  snmpPort?: number;
-  snmpTimeoutMs?: number;
-  softVersion?: string;
-  commandProtectionPassword?: string;
+  vendor?: string;
+  deviceType?: string;
+  overallStatus: 'online' | 'offline' | 'warning';
+  uptime?: string;
+  lastUpdate: string;
+  snmpStatus: 'success' | 'error' | 'timeout';
+  errorMessage?: string;
+}
+
+export interface OltDetailedResponse {
+  id: number;
+  name: string;
+  ipAddress?: string;
+  model?: string;
+  vendor?: string;
+  deviceType?: string;
+  overallStatus: 'online' | 'offline' | 'warning';
+  uptime?: string;
+  temperature?: string;
+  cpuUsage?: string;
+  memoryUsage?: string;
+  interfaceStatus?: string;
+  ports?: PortStatus[];
+  lastUpdate: string;
+  snmpStatus: 'success' | 'error' | 'timeout';
+  errorMessage?: string;
+}
+
+export interface PortStatus {
+  portNumber: number;
+  status: string;
+  speed?: string;
+  description?: string;
+  adminStatus?: string;
+  operStatus?: string;
 }
 
 export interface Ont {

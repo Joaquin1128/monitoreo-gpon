@@ -14,11 +14,6 @@ SELECT 'OLT' WHERE NOT EXISTS (SELECT 1 FROM device_type WHERE name = 'OLT');
 INSERT INTO device_type (name)
 SELECT 'ONT' WHERE NOT EXISTS (SELECT 1 FROM device_type WHERE name = 'ONT');
 
--- Insertar hub de pruebas
-INSERT INTO hub (name, latitude, longitude)
-SELECT 'Dev Hub', -34.6000, -58.5000
-WHERE NOT EXISTS (SELECT 1 FROM hub WHERE name = 'Dev Hub');
-
 -- Insertar OLT ZTE si no existe (usa ids de hub y vendor)
 INSERT INTO olt (hub_id, vendor_id, name, ip_address, cant_ports, snmp_version, snmp_community)
 SELECT h.id, v.id, 'OLT-ZTE-001', '10.0.0.10', 16, 'v2c', 'public'
@@ -35,7 +30,7 @@ WHERE o.name = 'OLT-ZTE-001' AND v.name = 'ZTE'
 
 -- Insertar definiciones OID para ZTE (OLT)
 INSERT INTO oid_definition (vendor_id, device_type_id, metric_key, oid, value_type)
-SELECT v.id, dt.id, 'cpuUsage', '.1.3.6.1.4.1.1234.1.1', 'NUMERIC'
+SELECT v.id, dt.id, 'cpuUsage', '.1.3.6.1.4.1.1234.1.1', 'GAUGE32'
 FROM vendor v, device_type dt
 WHERE v.name = 'ZTE' AND dt.name = 'OLT'
   AND NOT EXISTS (

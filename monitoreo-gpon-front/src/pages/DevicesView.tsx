@@ -21,7 +21,6 @@ import {
   Avatar
 } from '@mui/material';
 import {
-  Hub as HubIcon,
   Router as RouterIcon,
   Visibility as VisibilityIcon,
   Refresh as RefreshIcon,
@@ -31,40 +30,34 @@ import {
   MoreVert as MoreVertIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { hubService } from '../services';
-import { Hub, Olt } from '../types';
+import { oltSnmpService } from '../services';
+import { OltSummaryResponse } from '../types';
 
 const DevicesView: React.FC = () => {
-  const [hubs, setHubs] = useState<Hub[]>([]);
+  const [oltsSummary, setOltsSummary] = useState<OltSummaryResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadHubs();
+    loadOltsSummary();
   }, []);
 
-  const loadHubs = async () => {
+  const loadOltsSummary = async () => {
     try {
       setLoading(true);
-      const hubsData = await hubService.getAll();
-      setHubs(hubsData);
+      const summaryData = await oltSnmpService.getAllSummary();
+      setOltsSummary(summaryData);
       setError(null);
     } catch (err) {
-      console.error('Error loading hubs:', err);
+      console.error('Error loading OLTs summary:', err);
       setError('Error al cargar los dispositivos');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleViewOlt = (olt: Olt) => {
-    // Debug: Log the complete OLT object to understand its structure
-    console.log('DevicesView - OLT object:', olt);
-    console.log('DevicesView - OLT ID:', olt.id, 'Type:', typeof olt.id);
-    console.log('DevicesView - Hub object:', olt.hub);
-    console.log('DevicesView - Hub ID:', olt.hub?.id, 'Type:', typeof olt.hub?.id);
-    
+  const handleViewOlt = (olt: OltSummaryResponse) => {
     // Verificar que olt.id sea válido
     if (!olt.id) {
       console.error('DevicesView - OLT ID inválido:', { 
@@ -74,23 +67,22 @@ const DevicesView: React.FC = () => {
       return;
     }
     
-    // Si no hay hub, navegar solo con oltId
-    if (!olt.hub?.id) {
-      console.warn('DevicesView - Hub ID no disponible, navegando solo con OLT ID');
-      navigate(`/devices/olt/${olt.id}`);
-      return;
-    }
-    
-    // Navegación normal con hub y olt
-    navigate(`/devices/hub/${olt.hub.id}/olt/${olt.id}`);
+    // Navegar directamente al OLT
+    navigate(`/devices/olt/${olt.id}`);
   };
 
-  const getStatusColor = (olt: Olt) => {
-    return olt.ipAddress ? 'success' : 'warning';
+  const getStatusColor = (olt: OltSummaryResponse) => {
+    if (olt.snmpStatus === 'error') return 'error';
+    if (olt.snmpStatus === 'timeout') return 'warning';
+    return olt.overallStatus === 'online' ? 'success' : 
+           olt.overallStatus === 'warning' ? 'warning' : 'error';
   };
 
-  const getStatusText = (olt: Olt) => {
-    return olt.ipAddress ? 'Activo' : 'Sin IP';
+  const getStatusText = (olt: OltSummaryResponse) => {
+    if (olt.snmpStatus === 'error') return 'Error SNMP';
+    if (olt.snmpStatus === 'timeout') return 'Timeout SNMP';
+    return olt.overallStatus === 'online' ? 'Activo' : 
+           olt.overallStatus === 'warning' ? 'Advertencia' : 'Inactivo';
   };
 
   if (loading) {
@@ -110,7 +102,7 @@ const DevicesView: React.FC = () => {
         <Alert 
           severity="error" 
           action={
-            <Button color="inherit" size="small" onClick={loadHubs}>
+            <Button color="inherit" size="small" onClick={loadOltsSummary}>
               Reintentar
             </Button>
           }
@@ -144,7 +136,7 @@ const DevicesView: React.FC = () => {
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
-            onClick={loadHubs}
+            onClick={loadOltsSummary}
             disabled={loading}
             sx={{ borderRadius: 2 }}
           >
@@ -175,11 +167,11 @@ const DevicesView: React.FC = () => {
         >
           <Card sx={{ flex: 1, borderRadius: 3 }}>
             <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
-                {hubs.length}
+              <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                {oltsSummary.length}
               </Typography>
               <Typography variant="body1" color="textSecondary">
-                Hubs Totales
+                OLTs Totales
               </Typography>
             </CardContent>
           </Card>
@@ -192,11 +184,11 @@ const DevicesView: React.FC = () => {
         >
           <Card sx={{ flex: 1, borderRadius: 3 }}>
             <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                {hubs.reduce((total, hub) => total + (hub.olts?.length || 0), 0)}
+              <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#388e3c' }}>
+                {oltsSummary.filter(olt => olt.overallStatus === 'online').length}
               </Typography>
               <Typography variant="body1" color="textSecondary">
-                OLTs Totales
+                OLTs Activas
               </Typography>
             </CardContent>
           </Card>
@@ -209,13 +201,11 @@ const DevicesView: React.FC = () => {
         >
           <Card sx={{ flex: 1, borderRadius: 3 }}>
             <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#388e3c' }}>
-                {hubs.reduce((total, hub) => 
-                  total + (hub.olts?.filter(olt => olt.ipAddress).length || 0), 0
-                )}
+              <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#f59e0b' }}>
+                {oltsSummary.filter(olt => olt.snmpStatus === 'error').length}
               </Typography>
               <Typography variant="body1" color="textSecondary">
-                OLTs Activas
+                Con Errores SNMP
               </Typography>
             </CardContent>
           </Card>
@@ -223,9 +213,9 @@ const DevicesView: React.FC = () => {
       </Box>
 
       {/* Devices Table */}
-      {hubs.length === 0 ? (
+      {oltsSummary.length === 0 ? (
         <Paper sx={{ p: 6, textAlign: 'center', borderRadius: 3 }}>
-          <HubIcon sx={{ fontSize: 80, color: '#ccc', mb: 2 }} />
+          <RouterIcon sx={{ fontSize: 80, color: '#ccc', mb: 2 }} />
           <Typography variant="h5" color="textSecondary" sx={{ mb: 1 }}>
             No hay dispositivos disponibles
           </Typography>
@@ -246,7 +236,7 @@ const DevicesView: React.FC = () => {
               alignItems: 'center'
             }}>
               <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                Dispositivos ({hubs.reduce((total, hub) => total + (hub.olts?.length || 0), 0)})
+                Dispositivos ({oltsSummary.length})
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Typography variant="body2" color="textSecondary">
@@ -262,8 +252,8 @@ const DevicesView: React.FC = () => {
               <Table>
                 <TableHead>
                   <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                    <TableCell sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>NOMBRE PARA MOSTRAR</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>STATUS</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>NOMBRE</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>ESTADO</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>IP</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>MODELO</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>TIEMPO DE ACTIVIDAD</TableCell>
@@ -271,147 +261,76 @@ const DevicesView: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {hubs.map((hub, hubIndex) => (
-                    <React.Fragment key={hub.id}>
-                      {/* Hub Row */}
-                      <motion.tr
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3, delay: hubIndex * 0.05 }}
-                        style={{ display: 'table-row' }}
-                      >
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Avatar sx={{ 
-                              backgroundColor: '#81c784', 
-                              mr: 2,
-                              width: 40,
-                              height: 40
-                            }}>
-                              <HubIcon />
-                            </Avatar>
-                            <Box>
-                              <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                                {hub.name}
-                              </Typography>
-                              <Typography variant="body2" color="textSecondary">
-                                Hub • {hub.olts?.length || 0} OLTs
-                              </Typography>
-                            </Box>
+                  {oltsSummary.map((olt, oltIndex) => (
+                    <motion.tr
+                      key={olt.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3, delay: oltIndex * 0.05 }}
+                      style={{ display: 'table-row' }}
+                    >
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Avatar sx={{ 
+                            backgroundColor: '#ffb74d', 
+                            mr: 2,
+                            width: 40,
+                            height: 40
+                          }}>
+                            <RouterIcon />
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                              {olt.name}
+                            </Typography>
+                            <Typography variant="body2" color="textSecondary">
+                              {olt.vendor} • {olt.model || 'N/A'}
+                            </Typography>
                           </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label="Activo"
-                            color="success"
-                            size="small"
-                            icon={<NetworkIcon />}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                            N/A
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">
-                            Hub
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">
-                            Siempre activo
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Tooltip title="Ver detalles">
-                              <IconButton size="small" sx={{ color: '#1976d2' }}>
-                                <VisibilityIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Actualizar">
-                              <IconButton size="small" sx={{ color: '#388e3c' }}>
-                                <RefreshIcon />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        </TableCell>
-                      </motion.tr>
-
-                      {/* OLT Rows */}
-                      {hub.olts?.map((olt, oltIndex) => (
-                        <motion.tr
-                          key={olt.id}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.3, delay: (hubIndex * 0.05) + (oltIndex * 0.02) }}
-                          style={{ display: 'table-row' }}
-                        >
-                          <TableCell>
-                            <Box sx={{ display: 'flex', alignItems: 'center', pl: 4 }}>
-                              <Avatar sx={{ 
-                                backgroundColor: '#ffb74d', 
-                                mr: 2,
-                                width: 32,
-                                height: 32
-                              }}>
-                                <RouterIcon sx={{ fontSize: 18 }} />
-                              </Avatar>
-                              <Box>
-                                <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                                  {olt.name}
-                                </Typography>
-                                <Typography variant="caption" color="textSecondary">
-                                  OLT • {olt.cantPorts || 0} puertos
-                                </Typography>
-                              </Box>
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              label={getStatusText(olt)}
-                              color={getStatusColor(olt) as any}
-                              size="small"
-                              icon={<NetworkIcon />}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                              {olt.ipAddress || 'N/A'}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">
-                              {olt.model || 'N/A'}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">
-                              {olt.ipAddress ? '1 día, 23 horas' : 'N/A'}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                              <Tooltip title="Ver detalles">
-                                <IconButton 
-                                  size="small" 
-                                  sx={{ color: '#1976d2' }}
-                                  onClick={() => handleViewOlt(olt)}
-                                >
-                                  <VisibilityIcon />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Actualizar">
-                                <IconButton size="small" sx={{ color: '#388e3c' }}>
-                                  <RefreshIcon />
-                                </IconButton>
-                              </Tooltip>
-                            </Box>
-                          </TableCell>
-                        </motion.tr>
-                      ))}
-                    </React.Fragment>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={getStatusText(olt)}
+                          color={getStatusColor(olt) as any}
+                          size="small"
+                          icon={<NetworkIcon />}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                          {olt.ipAddress || 'N/A'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {olt.model || 'N/A'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {olt.uptime || 'N/A'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Tooltip title="Ver detalles">
+                            <IconButton 
+                              size="small" 
+                              sx={{ color: '#1976d2' }}
+                              onClick={() => handleViewOlt(olt)}
+                            >
+                              <VisibilityIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Actualizar">
+                            <IconButton size="small" sx={{ color: '#388e3c' }}>
+                              <RefreshIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </TableCell>
+                    </motion.tr>
                   ))}
                 </TableBody>
               </Table>
@@ -427,7 +346,7 @@ const DevicesView: React.FC = () => {
               alignItems: 'center'
             }}>
               <Typography variant="body2" color="textSecondary">
-                Mostrando desde 1 hasta {hubs.reduce((total, hub) => total + (hub.olts?.length || 0), 0)} de {hubs.reduce((total, hub) => total + (hub.olts?.length || 0), 0)} entradas
+                Mostrando desde 1 hasta {oltsSummary.length} de {oltsSummary.length} entradas
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button size="small" disabled>Anterior</Button>

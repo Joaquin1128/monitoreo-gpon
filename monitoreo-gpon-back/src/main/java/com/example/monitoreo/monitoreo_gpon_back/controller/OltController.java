@@ -30,10 +30,4 @@ public class OltController {
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }
-
-    @GetMapping("/hub/{hubId}")
-    public ResponseEntity<List<Olt>> getOltsByHub(@PathVariable Long hubId) {
-        List<Olt> olts = oltRepository.findByHubId(hubId);
-        return ResponseEntity.ok(olts);
-    }
 }

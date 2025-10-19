@@ -7,7 +7,9 @@ import {
   Olt,
   Ont,
   ProbeRequest,
-  ProbeResult
+  ProbeResult,
+  OltSummaryResponse,
+  OltDetailedResponse
 } from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
@@ -106,6 +108,17 @@ class ApiClient {
 
   async getOntsByOlt(oltId: number): Promise<Ont[]> {
     const response: AxiosResponse<Ont[]> = await this.client.get(`/api/onts/olt/${oltId}`);
+    return response.data;
+  }
+
+  // SNMP Status endpoints
+  async getOltsSummary(): Promise<OltSummaryResponse[]> {
+    const response: AxiosResponse<OltSummaryResponse[]> = await this.client.get('/api/snmp/olts/summary');
+    return response.data;
+  }
+
+  async getOltDetailed(oltId: number): Promise<OltDetailedResponse> {
+    const response: AxiosResponse<OltDetailedResponse> = await this.client.get(`/api/snmp/olts/${oltId}/detailed`);
     return response.data;
   }
 

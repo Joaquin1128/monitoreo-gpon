@@ -1,6 +1,6 @@
 package com.example.monitoreo.monitoreo_gpon_back.model;
 
-import com.example.monitoreo.monitoreo_gpon_back.model.enums.SnmpValueTypeEnum;
+import com.example.monitoreo.monitoreo_gpon_back.snmp.SnmpValueType;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,34 +27,32 @@ public class OidDefinition {
     @Column(name = "metric_key", nullable = false)
     private String metricKey;
 
+    @Column(name = "logical_name")
+    private String logicalName;
+
     @Column(nullable = false)
     private String oid;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
     @Column(name = "value_type", nullable = false)
-    private SnmpValueTypeEnum valueType = SnmpValueTypeEnum.STRING;
+    private SnmpValueType valueType = SnmpValueType.STRING;
 
     private String description;
 
-    public OidDefinition(String metricKey, String oid, SnmpValueTypeEnum valueType) {
+    public OidDefinition(String metricKey, String oid, SnmpValueType valueType) {
         this.metricKey = metricKey;
         this.oid = oid;
-        this.valueType = valueType == null ? SnmpValueTypeEnum.STRING : valueType;
+        this.valueType = valueType == null ? SnmpValueType.STRING : valueType;
     }
 
     public OidDefinition(String metricKey, String oid, String valueType) {
         this.metricKey = metricKey;
         this.oid = oid;
         if (valueType == null) {
-            this.valueType = SnmpValueTypeEnum.STRING;
+            this.valueType = SnmpValueType.STRING;
         } else {
-            String v = valueType.trim().toUpperCase();
-            if ("NUMERIC".equals(v)) {
-                this.valueType = SnmpValueTypeEnum.NUMERIC;
-            } else {
-                this.valueType = SnmpValueTypeEnum.STRING;
-            }
+            this.valueType = SnmpValueType.fromString(valueType);
         }
     }
 }

@@ -2,7 +2,6 @@ package com.example.monitoreo.monitoreo_gpon_back.model;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
@@ -18,11 +17,6 @@ public class Olt implements IDevice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @JsonBackReference
-    @ManyToOne
-    @JoinColumn(name = "hub_id")
-    private Hub hub;
 
     @ManyToOne
     @JoinColumn(name = "vendor_id")

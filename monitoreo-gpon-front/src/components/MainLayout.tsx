@@ -1,26 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '../components/Sidebar';
 import DevicesView from '../pages/DevicesView';
 import OltDashboard from '../pages/OltDashboard';
-import { Olt } from '../types';
 
 const MainLayout: React.FC = () => {
-  const [selectedOlt, setSelectedOlt] = useState<Olt | null>(null);
-
-  const handleOltSelect = (olt: Olt) => {
-    setSelectedOlt(olt);
-  };
-
   return (
     <Box sx={{ display: 'flex', height: '100vh', backgroundColor: '#f9fafb' }}>
       {/* Main Sidebar */}
-      <Sidebar 
-        selectedOltId={selectedOlt?.id}
-        onOltSelect={handleOltSelect}
-      />
+      <Sidebar />
       
       {/* Main Content */}
       <Box sx={{ flex: 1, overflow: 'auto' }}>

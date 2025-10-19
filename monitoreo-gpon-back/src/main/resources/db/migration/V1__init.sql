@@ -1,18 +1,6 @@
 -- V1__init.sql: esquema base para monitoreo SNMP con hubs, vendors y OID mappings
 
 -- =========================================
--- Tabla de hubs (ubicaciones físicas)
--- =========================================
-CREATE TABLE IF NOT EXISTS hub (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    latitude DECIMAL(10, 6),
-    longitude DECIMAL(10, 6),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- =========================================
 -- Tabla de vendors/marcas (Huawei, Sagemcom, etc.)
 -- =========================================
 CREATE TABLE IF NOT EXISTS vendor (
@@ -34,7 +22,6 @@ CREATE TABLE IF NOT EXISTS device_type (
 -- =========================================
 CREATE TABLE IF NOT EXISTS olt (
     id BIGSERIAL PRIMARY KEY,
-    hub_id BIGINT REFERENCES hub(id) ON DELETE SET NULL,
     vendor_id BIGINT REFERENCES vendor(id) ON DELETE SET NULL,
     name VARCHAR(255) NOT NULL,
     ip_address VARCHAR(100) NOT NULL,

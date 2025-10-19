@@ -19,7 +19,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 
 @Service
-public class Snmp4jService implements SnmpService {
+public class Snmp4jService {
 
     private static final Logger log = LoggerFactory.getLogger(Snmp4jService.class);
 
@@ -39,7 +39,6 @@ public class Snmp4jService implements SnmpService {
         if (transport != null) transport.close();
     }
 
-    @Override
     public Map<String, Variable> getByOids(String host, int port, String community, int timeoutMs, java.util.List<String> oids) throws Exception {
         UdpAddress targetAddress = new UdpAddress(host + "/" + port);
 
