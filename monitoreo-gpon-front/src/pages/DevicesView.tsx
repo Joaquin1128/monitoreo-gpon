@@ -43,31 +43,38 @@ const DevicesView: React.FC = () => {
     loadOltsSummary();
   }, []);
 
+  // Load summary data for the device list (calls /api/snmp/olts/summary)
+  // This endpoint returns only basic information: id, name, status, uptime, etc.
   const loadOltsSummary = async () => {
     try {
       setLoading(true);
-      const summaryData = await oltSnmpService.getAllSummary();
-      setOltsSummary(summaryData);
       setError(null);
-    } catch (err) {
+      const summaryData = await oltSnmpService.getAllSummary();
+      setOltsSummary(summaryData || []);
+    } catch (err: any) {
       console.error('Error loading OLTs summary:', err);
-      setError('Error al cargar los dispositivos');
+      const errorMessage = err?.response?.data?.message || err?.message || 'Error al cargar los dispositivos';
+      setError(errorMessage);
+      setOltsSummary([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle navigation to detailed view
+  // This will load the full detailed data via /api/snmp/olts/{id}/detailed
   const handleViewOlt = (olt: OltSummaryResponse) => {
     // Verificar que olt.id sea válido
-    if (!olt.id) {
+    if (!olt.id || olt.id <= 0) {
       console.error('DevicesView - OLT ID inválido:', { 
         oltId: olt.id, 
-        oltIdType: typeof olt.id
+        oltIdType: typeof olt.id,
+        oltName: olt.name
       });
       return;
     }
     
-    // Navegar directamente al OLT
+    // Navegar directamente al OLT detallado
     navigate(`/devices/olt/${olt.id}`);
   };
 

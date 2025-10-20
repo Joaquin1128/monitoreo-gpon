@@ -1,7 +1,6 @@
 package com.example.monitoreo.monitoreo_gpon_back.snmp.dto;
 
 import java.time.Instant;
-import java.util.List;
 
 import lombok.*;
 
@@ -21,7 +20,6 @@ public class OltDetailedResponse {
     private String cpuUsage;
     private String memoryUsage;
     private String interfaceStatus;
-    private List<PortStatus> ports;
     private String lastUpdate;
     private String snmpStatus;
     private String errorMessage;

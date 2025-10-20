@@ -36,6 +36,9 @@ export const oltService = {
 };
 
 // OLT SNMP Service
+// This service handles the two different endpoints:
+// 1. getAllSummary() - calls /api/snmp/olts/summary for list view (limited data)
+// 2. getDetailed(id) - calls /api/snmp/olts/{id}/detailed for detail view (full data)
 export const oltSnmpService = {
   async getAllSummary(): Promise<OltSummaryResponse[]> {
     return apiClient.getOltsSummary();

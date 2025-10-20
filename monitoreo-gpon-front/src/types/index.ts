@@ -33,6 +33,23 @@ export interface OltRef {
   ipAddress: string;
 }
 
+export interface Olt {
+  id: number;
+  name: string;
+  ipAddress: string;
+  model?: string;
+  vendor?: Vendor;
+  deviceType?: DeviceType;
+  serialNumber?: string;
+  cantPorts?: number;
+  snmpVersion?: string;
+  snmpCommunity?: string;
+  snmpPort?: number;
+  snmpTimeoutMs?: number;
+  softVersion?: string;
+  commandProtectionPassword?: string;
+}
+
 export interface Hub {
   id: number;
   name: string;

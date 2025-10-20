@@ -10,8 +10,7 @@ import {
   Alert,
   Button,
   Avatar,
-  IconButton,
-  Grid
+  IconButton
 } from '@mui/material';
 import {
   Router as RouterIcon,
@@ -42,17 +41,26 @@ const OltDashboard: React.FC = () => {
     }
   }, [oltId]);
 
+  // Load detailed data for the specific OLT (calls /api/snmp/olts/{id}/detailed)
+  // This endpoint returns comprehensive information: temperature, CPU, memory, 
+  // interface status, and other detailed metrics
   const loadOltDetailed = async () => {
-    if (!oltId) return;
+    if (!oltId) {
+      setError('ID de dispositivo no válido');
+      setLoading(false);
+      return;
+    }
     
     try {
       setLoading(true);
+      setError(null);
       const detailedData = await oltSnmpService.getDetailed(parseInt(oltId));
       setOltDetailed(detailedData);
-      setError(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading OLT detailed data:', err);
-      setError('Error al cargar los datos del dispositivo');
+      const errorMessage = err?.response?.data?.message || err?.message || 'Error al cargar los datos del dispositivo';
+      setError(errorMessage);
+      setOltDetailed(null);
     } finally {
       setLoading(false);
     }
@@ -163,8 +171,16 @@ const OltDashboard: React.FC = () => {
       </Box>
 
       {/* Status Overview */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={3}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        gap: 3, 
+        mb: 4 
+      }}>
+        <Box sx={{ 
+          flex: { xs: '1 1 100%', md: '1 1 calc(25% - 18px)' },
+          minWidth: { xs: '100%', md: '200px' }
+        }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -187,9 +203,12 @@ const OltDashboard: React.FC = () => {
               </CardContent>
             </Card>
           </motion.div>
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} md={3}>
+        <Box sx={{ 
+          flex: { xs: '1 1 100%', md: '1 1 calc(25% - 18px)' },
+          minWidth: { xs: '100%', md: '200px' }
+        }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -207,9 +226,12 @@ const OltDashboard: React.FC = () => {
               </CardContent>
             </Card>
           </motion.div>
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} md={3}>
+        <Box sx={{ 
+          flex: { xs: '1 1 100%', md: '1 1 calc(25% - 18px)' },
+          minWidth: { xs: '100%', md: '200px' }
+        }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -227,9 +249,12 @@ const OltDashboard: React.FC = () => {
               </CardContent>
             </Card>
           </motion.div>
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} md={3}>
+        <Box sx={{ 
+          flex: { xs: '1 1 100%', md: '1 1 calc(25% - 18px)' },
+          minWidth: { xs: '100%', md: '200px' }
+        }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -247,12 +272,19 @@ const OltDashboard: React.FC = () => {
               </CardContent>
             </Card>
           </motion.div>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {/* Detailed Metrics */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        gap: 3 
+      }}>
+        <Box sx={{ 
+          flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' },
+          minWidth: { xs: '100%', md: '300px' }
+        }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -302,9 +334,12 @@ const OltDashboard: React.FC = () => {
               </CardContent>
             </Card>
           </motion.div>
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} md={6}>
+        <Box sx={{ 
+          flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' },
+          minWidth: { xs: '100%', md: '300px' }
+        }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -349,8 +384,8 @@ const OltDashboard: React.FC = () => {
               </CardContent>
             </Card>
           </motion.div>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   );
 };
